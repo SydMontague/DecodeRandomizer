@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.ToggleSwitch;
 
+import com.amihaiemil.eoyaml.YamlMapping;
+
 import de.phoenixstaffel.decodetools.keepdata.Digimon;
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
 import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
@@ -118,11 +120,13 @@ public class StarterSettings implements Setting {
         return map;
     }
     
-    @SuppressWarnings("unchecked")
     @Override
-    public void load(Map<String, Object> map) {
-        List<Integer> activeList = ((List<Integer>) map.getOrDefault("checked", new ArrayList<>()));
+    public void load(YamlMapping map) {
+        if(map == null)
+            return;
+        
+        List<Integer> activeList = map.yamlSequence("checked").values().stream().map(a -> Integer.parseInt(a.asScalar().value())).collect(Collectors.toList());
         propertyMap.forEach((a, b) -> b.set(activeList.contains(a)));
-        enabled.set(Boolean.parseBoolean(map.getOrDefault("enabled", false).toString()));
+        enabled.set(Boolean.parseBoolean(map.string("enabled")));
     }
 }

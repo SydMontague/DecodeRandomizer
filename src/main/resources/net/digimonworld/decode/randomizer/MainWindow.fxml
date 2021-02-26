@@ -14,6 +14,7 @@
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 <?import org.controlsfx.control.ToggleSwitch?>
 
@@ -24,11 +25,6 @@
             <items>
                 <AnchorPane prefHeight="400.0" prefWidth="600.0">
                   <children>
-                     <Button accessibleText="Test" layoutX="280.0" layoutY="14.0" mnemonicParsing="false" onAction="#setupBaseROM" text="Setup Base ROM" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
-                        <tooltip>
-                           <Tooltip text="The ROM will be extracted and re-used until you pick another." />
-                        </tooltip>
-                     </Button>
                      <TextField fx:id="outputField" editable="false" layoutX="96.0" layoutY="14.0" prefHeight="25.0" prefWidth="241.0" promptText="place to save randomized ROM to" />
                      <TextField fx:id="seedField" layoutX="96.0" layoutY="56.0" prefHeight="25.0" prefWidth="200.0" promptText="Random" />
                      <Label layoutX="14.0" layoutY="18.0" text="Output Path" />
@@ -38,20 +34,29 @@
                      <Group layoutX="79.0" layoutY="164.0" />
                      <Button layoutX="498.0" layoutY="48.0" mnemonicParsing="false" onAction="#onLoadSettings" text="Load Settings" AnchorPane.rightAnchor="14.0" />
                      <Button layoutX="520.0" layoutY="81.0" mnemonicParsing="false" onAction="#onSaveSettings" text="Save Settings" AnchorPane.rightAnchor="14.0" />
-                     <Button layoutX="510.0" layoutY="125.0" mnemonicParsing="false" onAction="#onRandomize" text="Randomize" />
-                     <Label fx:id="romFoundSymbol" layoutX="463.0" layoutY="17.0" text="✘" textFill="RED">
-                        <font>
-                           <Font size="14.0" />
-                        </font>
-                        <padding>
-                           <Insets right="4.0" />
-                        </padding>
-                     </Label>
+                     <Button layoutX="510.0" layoutY="125.0" mnemonicParsing="false" onAction="#onRandomize" text="Randomize" AnchorPane.rightAnchor="14.0" />
                      <ToggleSwitch fx:id="raceLogging" layoutX="14.0" layoutY="116.0" text="Race Logging">
                         <tooltip>
                            <Tooltip text="Only log minimal information, &#10;preventing people looking up things in race settings." />
                         </tooltip>
                      </ToggleSwitch>
+                     <HBox alignment="CENTER_LEFT" layoutX="463.0" layoutY="14.0" AnchorPane.rightAnchor="14.0">
+                        <children>
+                           <Label fx:id="romFoundSymbol" text="✘" textFill="RED">
+                              <font>
+                                 <Font size="14.0" />
+                              </font>
+                              <padding>
+                                 <Insets right="4.0" />
+                              </padding>
+                           </Label>
+                           <Button accessibleText="Test" mnemonicParsing="false" onAction="#setupBaseROM" text="Setup Base ROM">
+                              <tooltip>
+                                 <Tooltip text="The ROM will be extracted and re-used until you pick another." />
+                              </tooltip>
+                           </Button>
+                        </children>
+                     </HBox>
                   </children>
                </AnchorPane>
                <TabPane fx:id="settingsPane" prefHeight="268.0" prefWidth="576.0" tabClosingPolicy="UNAVAILABLE" />

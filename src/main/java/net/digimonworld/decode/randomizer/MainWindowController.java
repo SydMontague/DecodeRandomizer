@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import org.controlsfx.control.ToggleSwitch;
 
 import com.amihaiemil.eoyaml.Yaml;
+import com.amihaiemil.eoyaml.YamlMapping;
 
 import de.phoenixstaffel.decodetools.core.Access;
 import de.phoenixstaffel.decodetools.core.DeleteDirectoryFileVisitor;
@@ -51,8 +52,6 @@ public class MainWindowController {
     
     private static final Path WORKING_PATH = Paths.get("./working");
     
-    private final Yaml yaml = new Yaml();
-    
     @FXML
     private Scene root;
     @FXML
@@ -74,7 +73,6 @@ public class MainWindowController {
     @FXML
     public void initialize() {
         updatedRomStatus();
-        updateSettings();
     }
     
     private void updateSettings() {
@@ -216,11 +214,10 @@ public class MainWindowController {
         configMap.put("raceLogging", raceLogging.isSelected());
         
         try (BufferedWriter writer = Files.newBufferedWriter(selected.toPath(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            writer.write(yaml.dumpAsMap(configMap));
+            Yaml.createYamlPrinter(writer).print(Yaml.createYamlDump(configMap).dump());
         }
     }
     
-    @SuppressWarnings("unchecked")
     @FXML
     public void onLoadSettings() throws IOException {
         FileChooser chooser = new FileChooser();
@@ -233,10 +230,10 @@ public class MainWindowController {
             return;
         
         try (InputStream is = Files.newInputStream(selected.toPath(), StandardOpenOption.READ)) {
-            Map<String, Object> map = yaml.load(is);
-            seedField.setText(map.getOrDefault("seed", "").toString());
-            settings.load((Map<String, Object>) map.getOrDefault("settings", new HashMap<>()));
-            raceLogging.setSelected(Boolean.parseBoolean(map.getOrDefault("raceLogging", false).toString()));
+            YamlMapping mapping = Yaml.createYamlInput(is).readYamlMapping();
+            seedField.setText(mapping.string("seed"));
+            raceLogging.setSelected(Boolean.parseBoolean(mapping.string("raceLogging")));
+            settings.load(mapping.yamlMapping("settings"));
         }
     }
     

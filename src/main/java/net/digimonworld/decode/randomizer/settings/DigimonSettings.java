@@ -2,6 +2,8 @@ package net.digimonworld.decode.randomizer.settings;
 
 import java.util.Map;
 
+import com.amihaiemil.eoyaml.YamlMapping;
+
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
 import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
 import javafx.geometry.Pos;
@@ -53,7 +55,10 @@ public class DigimonSettings implements Setting {
     }
     
     @Override
-    public void load(Map<String, Object> orDefault) {
+    public void load(YamlMapping map) {
+        if(map == null)
+            return;
+        
         // TODO Auto-generated method stub
         
     }

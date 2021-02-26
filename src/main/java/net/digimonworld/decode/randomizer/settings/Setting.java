@@ -2,6 +2,8 @@ package net.digimonworld.decode.randomizer.settings;
 
 import java.util.Map;
 
+import com.amihaiemil.eoyaml.YamlMapping;
+
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
 import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
 import javafx.scene.control.TitledPane;
@@ -15,5 +17,5 @@ public interface Setting {
     
     public Map<String, Object> serialize();
 
-    public void load(Map<String, Object> orDefault);
+    public void load(YamlMapping map);
 }

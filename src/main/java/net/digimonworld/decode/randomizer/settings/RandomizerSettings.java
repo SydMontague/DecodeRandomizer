@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.amihaiemil.eoyaml.YamlMapping;
+
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
 import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
 import javafx.geometry.Insets;
@@ -53,10 +55,12 @@ public class RandomizerSettings {
         return map;
     }
     
-    @SuppressWarnings("unchecked")
-    public void load(Map<String, Object> map) {
-        skillSettings.load((Map<String, Object>) map.getOrDefault("skillSettings", new HashMap<>()));
-        digimonSettings.load((Map<String, Object>) map.getOrDefault("digimonSettings", new HashMap<>()));
-        starterSettings.load((Map<String, Object>) map.getOrDefault("starterSettings", new HashMap<>()));
+    public void load(YamlMapping map) {
+        if(map == null)
+            return;
+        
+        skillSettings.load(map.yamlMapping("skillSettings"));
+        digimonSettings.load(map.yamlMapping("digimonSettings"));
+        starterSettings.load(map.yamlMapping("starterSettings"));
     }
 }

@@ -7,6 +7,8 @@ import java.util.Random;
 
 import org.controlsfx.control.ToggleSwitch;
 
+import com.amihaiemil.eoyaml.YamlMapping;
+
 import de.phoenixstaffel.decodetools.keepdata.Finisher;
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
 import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
@@ -291,13 +293,16 @@ public class SkillsSettings implements Setting {
     }
     
     @Override
-    public void load(Map<String, Object> map) {
-        this.randomizeMPCost.set(Boolean.parseBoolean(map.getOrDefault("randomizeMPCosts", false).toString()));
-        this.randomizeCooldown.set(Boolean.parseBoolean(map.getOrDefault("randomizeCooldown", false).toString()));
-        this.randomizeLearnRate.set(Boolean.parseBoolean(map.getOrDefault("randomizeLearnRate", false).toString()));
-        this.randomizeDamage.set(Boolean.parseBoolean(map.getOrDefault("randomizeDamage", false).toString()));
-        this.randomizeStatus.set(Boolean.parseBoolean(map.getOrDefault("randomizeStatus", false).toString()));
-        this.randomizeStatusChance.set(Boolean.parseBoolean(map.getOrDefault("randomizeStatusChance", false).toString()));
-        this.randomizeFinisher.set(Boolean.parseBoolean(map.getOrDefault("randomizeFinisher", false).toString()));
+    public void load(YamlMapping map) {
+        if(map == null)
+            return;
+        
+        this.randomizeMPCost.set(Boolean.parseBoolean(map.string("randomizeMPCosts")));
+        this.randomizeCooldown.set(Boolean.parseBoolean(map.string("randomizeCooldown")));
+        this.randomizeLearnRate.set(Boolean.parseBoolean(map.string("randomizeLearnRate")));
+        this.randomizeDamage.set(Boolean.parseBoolean(map.string("randomizeDamage")));
+        this.randomizeStatus.set(Boolean.parseBoolean(map.string("randomizeStatus")));
+        this.randomizeStatusChance.set(Boolean.parseBoolean(map.string("randomizeStatusChance")));
+        this.randomizeFinisher.set(Boolean.parseBoolean(map.string("randomizeFinisher")));
     }
 }
