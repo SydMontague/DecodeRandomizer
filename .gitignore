@@ -1,0 +1,11 @@
+/target/
+/working/
+/logs/
+/*.exe
+/.classpath
+/.project
+/.settings/
+
+# Testing stuff
+config.yml
+*.cci

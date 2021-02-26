@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.Scene?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Font?>
+<?import org.controlsfx.control.ToggleSwitch?>
+
+<Scene fx:id="root" stylesheets="@main.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.digimonworld.decode.randomizer.MainWindowController">
+   <BorderPane>
+      <center>
+         <SplitPane dividerPositions="0.0" orientation="VERTICAL">
+            <items>
+                <AnchorPane prefHeight="400.0" prefWidth="600.0">
+                  <children>
+                     <Button accessibleText="Test" layoutX="280.0" layoutY="14.0" mnemonicParsing="false" onAction="#setupBaseROM" text="Setup Base ROM" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+                        <tooltip>
+                           <Tooltip text="The ROM will be extracted and re-used until you pick another." />
+                        </tooltip>
+                     </Button>
+                     <TextField fx:id="outputField" editable="false" layoutX="96.0" layoutY="14.0" prefHeight="25.0" prefWidth="241.0" promptText="place to save randomized ROM to" />
+                     <TextField fx:id="seedField" layoutX="96.0" layoutY="56.0" prefHeight="25.0" prefWidth="200.0" promptText="Random" />
+                     <Label layoutX="14.0" layoutY="18.0" text="Output Path" />
+                     <Label layoutX="53.0" layoutY="60.0" text="Seed" />
+                     <Button layoutX="336.0" layoutY="14.0" mnemonicParsing="false" onAction="#selectOutputPath" text="Select" />
+                     <Button layoutX="295.0" layoutY="56.0" mnemonicParsing="false" onAction="#createRandomSeed" text="Random Seed" />
+                     <Group layoutX="79.0" layoutY="164.0" />
+                     <Button layoutX="498.0" layoutY="48.0" mnemonicParsing="false" onAction="#onLoadSettings" text="Load Settings" AnchorPane.rightAnchor="14.0" />
+                     <Button layoutX="520.0" layoutY="81.0" mnemonicParsing="false" onAction="#onSaveSettings" text="Save Settings" AnchorPane.rightAnchor="14.0" />
+                     <Button layoutX="510.0" layoutY="125.0" mnemonicParsing="false" onAction="#onRandomize" text="Randomize" />
+                     <Label fx:id="romFoundSymbol" layoutX="463.0" layoutY="17.0" text="✘" textFill="RED">
+                        <font>
+                           <Font size="14.0" />
+                        </font>
+                        <padding>
+                           <Insets right="4.0" />
+                        </padding>
+                     </Label>
+                     <ToggleSwitch fx:id="raceLogging" layoutX="14.0" layoutY="116.0" text="Race Logging">
+                        <tooltip>
+                           <Tooltip text="Only log minimal information, &#10;preventing people looking up things in race settings." />
+                        </tooltip>
+                     </ToggleSwitch>
+                  </children>
+               </AnchorPane>
+               <TabPane fx:id="settingsPane" prefHeight="268.0" prefWidth="576.0" tabClosingPolicy="UNAVAILABLE" />
+            </items>
+         </SplitPane>
+      </center>
+      <top>
+         <MenuBar prefHeight="25.0" prefWidth="195.0" BorderPane.alignment="CENTER">
+           <menus>
+             <Menu mnemonicParsing="false" text="File">
+               <items>
+                 <MenuItem mnemonicParsing="false" onAction="#onClose" text="Close" />
+               </items>
+             </Menu>
+             <Menu mnemonicParsing="false" text="Help">
+               <items>
+                 <MenuItem mnemonicParsing="false" onAction="#onAbout" text="About" />
+               </items>
+             </Menu>
+           </menus>
+         </MenuBar>
+      </top>
+   </BorderPane>
+</Scene>

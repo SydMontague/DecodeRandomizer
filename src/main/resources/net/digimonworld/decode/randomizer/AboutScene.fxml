@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Scene?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.stage.Stage?>
+
+<Stage title="About DWRDD Randomizer" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.digimonworld.decode.randomizer.AboutWindowController">
+   <scene>
+      <Scene>
+         <DialogPane prefHeight="168.0" prefWidth="360.0">
+            <content>
+               <TextFlow prefHeight="200.0" prefWidth="200.0" textAlignment="CENTER">
+                  <children>
+                     <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Digimon World Re:Digitize Decode Randomizer&#10;Version 0.0.1&#10;&#10;This software is licensed under &lt;license&gt;&#10;&#10;Developed by Syd Montague&#10;&#10;" />
+                     <Hyperlink onAction="#clickGitHub" text="GitHub" underline="true" />
+                     <Hyperlink onAction="#clickDiscord" text="Discord" underline="true" />
+                     <Hyperlink onAction="#clickLicense" text="License" underline="true" />
+                  </children>
+               </TextFlow>
+            </content>
+         </DialogPane>
+      </Scene>
+   </scene>
+</Stage>
