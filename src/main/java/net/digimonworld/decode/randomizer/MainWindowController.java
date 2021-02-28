@@ -242,9 +242,9 @@ public class MainWindowController {
         romFoundSymbol.setText(exists ? "✔" : "✘");
         romFoundSymbol.setTextFill(exists ? Color.GREEN : Color.RED);
         
-        if(exists) {
-            try(Access access = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/GlobalKeepData.res").toFile());
-                Access access2 = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/LanguageKeep_jp.res").toFile())) {
+        if (exists) {
+            try (Access access = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/GlobalKeepData.res").toFile());
+                    Access access2 = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/LanguageKeep_jp.res").toFile())) {
                 this.inputData = new GlobalKeepData((AbstractKCAP) ResPayload.craft(access));
                 this.languageKeep = new LanguageKeep((AbstractKCAP) ResPayload.craft(access2));
             }
