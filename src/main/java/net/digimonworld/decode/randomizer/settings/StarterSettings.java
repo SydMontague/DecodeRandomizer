@@ -82,6 +82,7 @@ public class StarterSettings implements Setting {
         
         CheckTreeView<DigimonEntry> tree = new CheckTreeView<>(root);
         tree.setShowRoot(false);
+        tree.disableProperty().bind(enabled.not());
         
         vbox.getChildren().addAll(enabledSwitch, tree);
         return pane;

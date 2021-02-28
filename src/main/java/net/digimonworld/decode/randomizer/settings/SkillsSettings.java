@@ -3,9 +3,8 @@ package net.digimonworld.decode.randomizer.settings;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
-
-import org.controlsfx.control.ToggleSwitch;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
@@ -19,10 +18,10 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.TitledPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
+import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
 
 public class SkillsSettings implements Setting {
     /*-
@@ -41,10 +40,6 @@ public class SkillsSettings implements Setting {
      */
     // TODO Tooltips
     
-    private static final String FORMAT_FLOAT = "%28s | %12s | %#.4f -> %#.4f";
-    private static final String FORMAT_INT = "%28s | %12s | %4d -> %4d";
-    private static final String FORMAT_STRING = "%28s | %12s | %8s -> %8s";
-    
     private BooleanProperty randomizeMPCost = new SimpleBooleanProperty();
     private BooleanProperty randomizeCooldown = new SimpleBooleanProperty();
     private BooleanProperty randomizeLearnRate = new SimpleBooleanProperty();
@@ -60,23 +55,13 @@ public class SkillsSettings implements Setting {
         vbox.setAlignment(Pos.TOP_RIGHT);
         pane.setCollapsible(false);
         
-        ToggleSwitch mpSwitch = new ToggleSwitch("MP Cost");
-        mpSwitch.selectedProperty().bindBidirectional(randomizeMPCost);
-        ToggleSwitch cooldownSwitch = new ToggleSwitch("Cooldown");
-        cooldownSwitch.selectedProperty().bindBidirectional(randomizeCooldown);
-        ToggleSwitch learnSwitch = new ToggleSwitch("Learn Rate");
-        learnSwitch.selectedProperty().bindBidirectional(randomizeLearnRate);
-        ToggleSwitch powerSwitch = new ToggleSwitch("Power");
-        powerSwitch.selectedProperty().bindBidirectional(randomizeDamage);
-        ToggleSwitch statusSwitch = new ToggleSwitch("Status");
-        statusSwitch.selectedProperty().bindBidirectional(randomizeStatus);
-        ToggleSwitch statusChanceSwitch = new ToggleSwitch("Status Chance");
-        statusChanceSwitch.selectedProperty().bindBidirectional(randomizeStatusChance);
-        ToggleSwitch finisherSwitch = new ToggleSwitch("Finisher");
-        finisherSwitch.selectedProperty().bindBidirectional(randomizeFinisher);
-        finisherSwitch.setTooltip(new Tooltip("Power and Status effect, is enabled."));
-        
-        vbox.getChildren().addAll(mpSwitch, cooldownSwitch, learnSwitch, powerSwitch, statusSwitch, statusChanceSwitch, finisherSwitch);
+        vbox.getChildren().addAll(JavaFXUtils.buildToggleSwitch("MP Cost", Optional.empty(), Optional.of(randomizeMPCost)),
+                                  JavaFXUtils.buildToggleSwitch("Cooldown", Optional.empty(), Optional.of(randomizeCooldown)),
+                                  JavaFXUtils.buildToggleSwitch("Learn Rate", Optional.empty(), Optional.of(randomizeLearnRate)),
+                                  JavaFXUtils.buildToggleSwitch("Power", Optional.empty(), Optional.of(randomizeDamage)),
+                                  JavaFXUtils.buildToggleSwitch("Status", Optional.empty(), Optional.of(randomizeStatus)),
+                                  JavaFXUtils.buildToggleSwitch("Status Chance", Optional.empty(), Optional.of(randomizeStatusChance)),
+                                  JavaFXUtils.buildToggleSwitch("Finisher", Optional.empty(), Optional.of(randomizeFinisher)));
         return pane;
     }
     
