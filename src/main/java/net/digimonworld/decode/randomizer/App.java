@@ -16,6 +16,28 @@ import javafx.stage.Stage;
  * - xdelta | Apache 2.0, bundle | https://github.com/jmacd/xdelta
  */
 
+/* TODO features
+ * item spawns
+ * enemy spawns
+ *  - type
+ *  - stats
+ *  - drops
+ *  - moves
+ *  - bits?
+ *  - decode XP?
+ *  - accessory??
+ * treasure hunt loot?
+ * type advantages
+ * shops/vending machines?
+ * 
+ * patches
+ *  - brain training learning
+ *  - view distance
+ *  - camera distance
+ *  - priority randomization (rookies)
+ *  - player character
+ */
+
 public class App extends Application {
     private static App instance;
     

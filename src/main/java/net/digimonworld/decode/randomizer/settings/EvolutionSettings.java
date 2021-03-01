@@ -42,8 +42,7 @@ public class EvolutionSettings implements Setting {
     
     private BooleanProperty randomizeRequirements = new SimpleBooleanProperty();
     private BooleanProperty randomizePaths = new SimpleBooleanProperty();
-    
-    // TODO statsgains randomization
+    private BooleanProperty randomizeStatsgains = new SimpleBooleanProperty();
     
     @Override
     public TitledPane create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -53,7 +52,8 @@ public class EvolutionSettings implements Setting {
         pane.setCollapsible(false);
         
         vbox.getChildren().addAll(JavaFXUtils.buildToggleSwitch("Requirements", Optional.empty(), Optional.of(randomizeRequirements)),
-                                  JavaFXUtils.buildToggleSwitch("Paths", Optional.empty(), Optional.of(randomizePaths)));
+                                  JavaFXUtils.buildToggleSwitch("Paths", Optional.empty(), Optional.of(randomizePaths)),
+                                  JavaFXUtils.buildToggleSwitch("Stats Gains", Optional.empty(), Optional.of(randomizeStatsgains)));
         
         return pane;
     }
@@ -64,6 +64,69 @@ public class EvolutionSettings implements Setting {
             randomizeRequirements(context);
         if (randomizePaths.get())
             randomizePaths(context);
+        if (randomizeStatsgains.get())
+            randomizeStatsgains(context);
+    }
+    
+    private void randomizeStatsgains(RandomizationContext context) {
+        Random rand = new Random(context.getInitialSeed() * "StatsGains".hashCode());
+        
+        for (ListIterator<Digimon> itr = context.getGlobalKeepData().getDigimonData().listIterator(); itr.hasNext();) {
+            int id = itr.nextIndex();
+            Digimon digi = itr.next();
+            DigimonRaising raise = context.getGlobalKeepData().getRaiseData().get(id);
+            String name = context.getLanguageKeep().getDigimonNames().getStringById(id + 1);
+            
+            if ((digi.getUnk38() & 1) == 1 && raise.getGainHP() != 0) {
+                IntSupplier gen = getStatsGainGenerator(digi.getLevel(), rand);
+                
+                context.logLine(LogLevel.CASUAL, String.format("=== %s's Stats Gains ===", name));
+                context.logLine(LogLevel.CASUAL,
+                                String.format("Old: %5d %5d %4d %4d %4d %4d",
+                                              raise.getGainHP(),
+                                              raise.getGainMP(),
+                                              raise.getGainOFF(),
+                                              raise.getGainDEF(),
+                                              raise.getGainSPD(),
+                                              raise.getGainBRN()));
+                
+                raise.setGainHP((short) (gen.getAsInt() * 10));
+                raise.setGainMP((short) (gen.getAsInt() * 10));
+                raise.setGainOFF((short) gen.getAsInt());
+                raise.setGainDEF((short) gen.getAsInt());
+                raise.setGainSPD((short) gen.getAsInt());
+                raise.setGainBRN((short) gen.getAsInt());
+                
+                context.logLine(LogLevel.CASUAL,
+                                String.format("New: %5d %5d %4d %4d %4d %4d",
+                                              raise.getGainHP(),
+                                              raise.getGainMP(),
+                                              raise.getGainOFF(),
+                                              raise.getGainDEF(),
+                                              raise.getGainSPD(),
+                                              raise.getGainBRN()));
+                context.logLine(LogLevel.CASUAL, "");
+            }
+        }
+    }
+    
+    public IntSupplier getStatsGainGenerator(Level level, Random rand) {
+        switch (level) {
+            case BABY1:
+                return () -> 8 + rand.nextInt(10);
+            case BABY2:
+                return () -> 16 + rand.nextInt(19);
+            case CHILD:
+                return () -> 30 + rand.nextInt(101);
+            case ADULT:
+                return () -> 100 + rand.nextInt(101);
+            case PERFECT:
+                return () -> 250 + rand.nextInt(251);
+            case ULTIMATE:
+                return () -> 430 + rand.nextInt(571);
+            default:
+                return () -> 0;
+        }
     }
     
     private void randomizePaths(RandomizationContext context) {
@@ -366,6 +429,7 @@ public class EvolutionSettings implements Setting {
         
         map.put("randomizeRequirements", randomizeRequirements);
         map.put("randomizePaths", randomizePaths);
+        map.put("randomizeStatsgains", randomizeStatsgains);
         
         return map;
     }
@@ -377,5 +441,6 @@ public class EvolutionSettings implements Setting {
         
         this.randomizeRequirements.set(Boolean.parseBoolean(map.string("randomizeRequirements")));
         this.randomizePaths.set(Boolean.parseBoolean(map.string("randomizePaths")));
+        this.randomizeStatsgains.set(Boolean.parseBoolean(map.string("randomizeStatsgains")));
     }
 }
