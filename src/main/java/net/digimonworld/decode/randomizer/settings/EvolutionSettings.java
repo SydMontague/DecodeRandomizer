@@ -233,6 +233,9 @@ public class EvolutionSettings implements Setting {
             List<Requirement> requirements = evo.getRequirements();
             
             switch (a.getLevel()) {
+                case CHILD:
+                    requirements.add(new Requirement(SuperGroup.BONUS, (byte) requirements.size(), Operator.AND, Comperator.GREATER_THAN, Type.HAPPINESS, 0));
+                    break;
                 case ADULT:
                     requirements = generateAdultRequirements(rand);
                     break;
@@ -427,9 +430,9 @@ public class EvolutionSettings implements Setting {
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
         
-        map.put("randomizeRequirements", randomizeRequirements);
-        map.put("randomizePaths", randomizePaths);
-        map.put("randomizeStatsgains", randomizeStatsgains);
+        map.put("randomizeRequirements", randomizeRequirements.get());
+        map.put("randomizePaths", randomizePaths.get());
+        map.put("randomizeStatsgains", randomizeStatsgains.get());
         
         return map;
     }

@@ -27,12 +27,9 @@ import javafx.stage.Stage;
  *  - decode XP?
  *  - accessory??
  * treasure hunt loot?
- * type advantages
  * shops/vending machines?
  * 
  * patches
- *  - brain training learning
- *  - view distance
  *  - camera distance
  *  - priority randomization (rookies)
  *  - player character

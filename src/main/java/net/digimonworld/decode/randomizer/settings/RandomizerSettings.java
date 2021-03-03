@@ -21,12 +21,16 @@ public class RandomizerSettings {
     private DigimonSettings digimonSettings = new DigimonSettings();
     private EvolutionSettings evolutionSettings = new EvolutionSettings();
     private StarterSettings starterSettings = new StarterSettings();
+    private WorldSettings worldSettings = new WorldSettings();
+    private PatchSettings patchSettings = new PatchSettings();
     
     public void randomize(RandomizationContext context) {
         skillSettings.randomize(context);
         digimonSettings.randomize(context);
         evolutionSettings.randomize(context);
         starterSettings.randomize(context);
+        worldSettings.randomize(context);
+        patchSettings.randomize(context);
     }
     
     public List<Tab> create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -36,6 +40,7 @@ public class RandomizerSettings {
             generalPane.setHgap(10);
             generalPane.setPadding(new Insets(10));
             generalPane.setOrientation(Orientation.VERTICAL);
+            generalPane.setPrefWrapLength(400);
             
             for (Setting setting : a.getValue())
                 generalPane.getChildren().add(setting.create(inputData, languageKeep));
@@ -45,7 +50,7 @@ public class RandomizerSettings {
     }
     
     private Map<String, List<Setting>> getSettingsMap() {
-        return Map.of("General", Arrays.asList(skillSettings, digimonSettings, evolutionSettings, starterSettings));
+        return Map.of("General", Arrays.asList(skillSettings, digimonSettings, evolutionSettings, worldSettings, patchSettings, starterSettings));
     }
     
     public Map<String, Object> serialize() {
@@ -54,6 +59,8 @@ public class RandomizerSettings {
         map.put("digimonSettings", digimonSettings.serialize());
         map.put("evolutionSettings", evolutionSettings.serialize());
         map.put("starterSettings", starterSettings.serialize());
+        map.put("worldSettings", worldSettings.serialize());
+        map.put("patchSettings", patchSettings.serialize());
         
         return map;
     }
@@ -66,5 +73,7 @@ public class RandomizerSettings {
         digimonSettings.load(map.yamlMapping("digimonSettings"));
         evolutionSettings.load(map.yamlMapping("evolutionSettings"));
         starterSettings.load(map.yamlMapping("starterSettings"));
+        worldSettings.load(map.yamlMapping("worldSettings"));
+        patchSettings.load(map.yamlMapping("patchSettings"));
     }
 }

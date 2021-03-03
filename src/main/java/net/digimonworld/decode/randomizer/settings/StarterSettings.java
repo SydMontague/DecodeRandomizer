@@ -13,6 +13,7 @@ import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.ToggleSwitch;
 
 import com.amihaiemil.eoyaml.YamlMapping;
+import com.amihaiemil.eoyaml.YamlSequence;
 
 import de.phoenixstaffel.decodetools.keepdata.Digimon;
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
@@ -126,7 +127,8 @@ public class StarterSettings implements Setting {
         if(map == null)
             return;
         
-        List<Integer> activeList = map.yamlSequence("checked").values().stream().map(a -> Integer.parseInt(a.asScalar().value())).collect(Collectors.toList());
+        YamlSequence list = map.yamlSequence("checked");
+        List<Integer> activeList = list == null ? new ArrayList<>() : list.values().stream().map(a -> Integer.parseInt(a.asScalar().value())).collect(Collectors.toList());
         propertyMap.forEach((a, b) -> b.set(activeList.contains(a)));
         enabled.set(Boolean.parseBoolean(map.string("enabled")));
     }
