@@ -23,6 +23,7 @@ public class RandomizerSettings {
     private StarterSettings starterSettings = new StarterSettings();
     private WorldSettings worldSettings = new WorldSettings();
     private PatchSettings patchSettings = new PatchSettings();
+    private PlayerSettings playerSettings = new PlayerSettings();
     
     public void randomize(RandomizationContext context) {
         skillSettings.randomize(context);
@@ -31,6 +32,7 @@ public class RandomizerSettings {
         starterSettings.randomize(context);
         worldSettings.randomize(context);
         patchSettings.randomize(context);
+        playerSettings.randomize(context);
     }
     
     public List<Tab> create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -50,7 +52,8 @@ public class RandomizerSettings {
     }
     
     private Map<String, List<Setting>> getSettingsMap() {
-        return Map.of("General", Arrays.asList(skillSettings, digimonSettings, evolutionSettings, worldSettings, patchSettings, starterSettings));
+        return Map.of("General",
+                      Arrays.asList(skillSettings, digimonSettings, evolutionSettings, worldSettings, patchSettings, starterSettings, playerSettings));
     }
     
     public Map<String, Object> serialize() {
@@ -61,12 +64,13 @@ public class RandomizerSettings {
         map.put("starterSettings", starterSettings.serialize());
         map.put("worldSettings", worldSettings.serialize());
         map.put("patchSettings", patchSettings.serialize());
+        map.put("playerSettings", playerSettings.serialize());
         
         return map;
     }
     
     public void load(YamlMapping map) {
-        if(map == null)
+        if (map == null)
             return;
         
         skillSettings.load(map.yamlMapping("skillSettings"));
@@ -75,5 +79,6 @@ public class RandomizerSettings {
         starterSettings.load(map.yamlMapping("starterSettings"));
         worldSettings.load(map.yamlMapping("worldSettings"));
         patchSettings.load(map.yamlMapping("patchSettings"));
+        playerSettings.load(map.yamlMapping("playerSettings"));
     }
 }

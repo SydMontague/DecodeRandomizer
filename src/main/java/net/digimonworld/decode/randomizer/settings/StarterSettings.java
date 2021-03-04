@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.CheckTreeView;
-import org.controlsfx.control.ToggleSwitch;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 import com.amihaiemil.eoyaml.YamlSequence;
@@ -27,6 +27,7 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
+import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
 
 public class StarterSettings implements Setting {
     
@@ -44,7 +45,7 @@ public class StarterSettings implements Setting {
             return name;
         }
     }
-
+    
     private BooleanProperty enabled = new SimpleBooleanProperty();
     private Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
     
@@ -54,9 +55,6 @@ public class StarterSettings implements Setting {
         TitledPane pane = new TitledPane("Starter", vbox);
         vbox.setAlignment(Pos.TOP_LEFT);
         pane.setCollapsible(false);
-
-        ToggleSwitch enabledSwitch = new ToggleSwitch("Enabled");
-        enabledSwitch.selectedProperty().bindBidirectional(enabled);
         
         CheckBoxTreeItem<DigimonEntry> root = new CheckBoxTreeItem<>(new DigimonEntry(-10, "Root"));
         Map<Level, List<DigimonEntry>> map = new EnumMap<>(Level.class);
@@ -66,7 +64,8 @@ public class StarterSettings implements Setting {
             Digimon digi = itr.next();
             
             if ((digi.getUnk38() & 1) == 1)
-                map.computeIfAbsent(digi.getLevel(), a -> new ArrayList<DigimonEntry>()).add(new DigimonEntry(id, language.getDigimonNames().getStringById(id)));
+                map.computeIfAbsent(digi.getLevel(), a -> new ArrayList<DigimonEntry>())
+                   .add(new DigimonEntry(id, language.getDigimonNames().getStringById(id)));
         }
         
         map.entrySet().forEach(a -> {
@@ -85,7 +84,7 @@ public class StarterSettings implements Setting {
         tree.setShowRoot(false);
         tree.disableProperty().bind(enabled.not());
         
-        vbox.getChildren().addAll(enabledSwitch, tree);
+        vbox.getChildren().addAll(JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(enabled)), tree);
         return pane;
     }
     
@@ -93,7 +92,7 @@ public class StarterSettings implements Setting {
     public void randomize(RandomizationContext context) {
         List<Integer> list = propertyMap.entrySet().stream().filter(a -> a.getValue().get()).map(Map.Entry::getKey).collect(Collectors.toList());
         
-        if(!enabled.get() || list.isEmpty())
+        if (!enabled.get() || list.isEmpty())
             return;
         
         context.logLine(LogLevel.ALWAYS, "Randomizing starter Digimon...");
@@ -104,7 +103,7 @@ public class StarterSettings implements Setting {
         
         context.addASM(".org 0x12CCC4");
         context.addASM(String.format(".byte 0x%02X", starterRina));
-
+        
         context.addASM(".org 0x27AA18");
         context.addASM(String.format(".byte 0x%02X", starterTaiga));
         
@@ -124,11 +123,12 @@ public class StarterSettings implements Setting {
     
     @Override
     public void load(YamlMapping map) {
-        if(map == null)
+        if (map == null)
             return;
         
         YamlSequence list = map.yamlSequence("checked");
-        List<Integer> activeList = list == null ? new ArrayList<>() : list.values().stream().map(a -> Integer.parseInt(a.asScalar().value())).collect(Collectors.toList());
+        List<Integer> activeList = list == null ? new ArrayList<>()
+                : list.values().stream().map(a -> Integer.parseInt(a.asScalar().value())).collect(Collectors.toList());
         propertyMap.forEach((a, b) -> b.set(activeList.contains(a)));
         enabled.set(Boolean.parseBoolean(map.string("enabled")));
     }
