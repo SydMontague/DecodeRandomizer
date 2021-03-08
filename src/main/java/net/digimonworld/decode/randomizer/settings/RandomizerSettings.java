@@ -42,7 +42,7 @@ public class RandomizerSettings {
             generalPane.setHgap(10);
             generalPane.setPadding(new Insets(10));
             generalPane.setOrientation(Orientation.VERTICAL);
-            generalPane.setPrefWrapLength(400);
+            generalPane.setPrefWrapLength(500);
             
             for (Setting setting : a.getValue())
                 generalPane.getChildren().add(setting.create(inputData, languageKeep));
