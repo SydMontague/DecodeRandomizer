@@ -35,7 +35,7 @@ public class PlayerSettings implements Setting {
     @Override
     public TitledPane create(GlobalKeepData inputData, LanguageKeep languageKeep) {
         VBox vbox = new VBox(8);
-        TitledPane pane = new TitledPane("Starter", vbox);
+        TitledPane pane = new TitledPane("Player", vbox);
         vbox.setAlignment(Pos.TOP_LEFT);
         pane.setCollapsible(false);
         

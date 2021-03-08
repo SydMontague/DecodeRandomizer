@@ -18,21 +18,10 @@ import javafx.stage.Stage;
 
 /* TODO features
  * item spawns
- * enemy spawns
- *  - type
- *  - stats
- *  - drops
- *  - moves
- *  - bits?
- *  - decode XP?
- *  - accessory??
- * treasure hunt loot?
- * shops/vending machines?
  * 
  * patches
  *  - camera distance
  *  - priority randomization (rookies)
- *  - player character
  */
 
 public class App extends Application {
@@ -40,7 +29,7 @@ public class App extends Application {
     
     public App() {
         synchronized (App.class) {
-            if(instance == null)
+            if (instance == null)
                 instance = this;
             else
                 throw new UnsupportedOperationException("Tried to instantiate the App's main class more than once.");
@@ -58,9 +47,9 @@ public class App extends Application {
         stage.setTitle("Digimon World Re:Digitize Decode Randomizer v0.0.1");
         stage.show();
     }
-
+    
     public static void main(String[] args) {
         Application.launch(args);
     }
-
+    
 }
