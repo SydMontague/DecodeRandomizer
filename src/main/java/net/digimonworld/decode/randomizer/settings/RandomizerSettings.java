@@ -42,7 +42,7 @@ public class RandomizerSettings {
             generalPane.setHgap(10);
             generalPane.setPadding(new Insets(10));
             generalPane.setOrientation(Orientation.VERTICAL);
-            generalPane.setPrefWrapLength(500);
+            generalPane.setPrefWrapLength(400);
             
             for (Setting setting : a.getValue())
                 generalPane.getChildren().add(setting.create(inputData, languageKeep));
@@ -53,7 +53,9 @@ public class RandomizerSettings {
     
     private Map<String, List<Setting>> getSettingsMap() {
         return Map.of("General",
-                      Arrays.asList(skillSettings, digimonSettings, evolutionSettings, worldSettings, patchSettings, starterSettings, playerSettings));
+                      Arrays.asList(digimonSettings, evolutionSettings, skillSettings, worldSettings, patchSettings),
+                      "New Game",
+                      Arrays.asList(starterSettings, playerSettings));
     }
     
     public Map<String, Object> serialize() {

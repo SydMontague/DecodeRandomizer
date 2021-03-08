@@ -55,6 +55,7 @@ public class StarterSettings implements Setting {
         TitledPane pane = new TitledPane("Starter", vbox);
         vbox.setAlignment(Pos.TOP_LEFT);
         pane.setCollapsible(false);
+        pane.setPrefHeight(400);
         
         CheckBoxTreeItem<DigimonEntry> root = new CheckBoxTreeItem<>(new DigimonEntry(-10, "Root"));
         Map<Level, List<DigimonEntry>> map = new EnumMap<>(Level.class);

@@ -38,6 +38,7 @@ public class PlayerSettings implements Setting {
         TitledPane pane = new TitledPane("Player", vbox);
         vbox.setAlignment(Pos.TOP_LEFT);
         pane.setCollapsible(false);
+        pane.setPrefHeight(400);
         
         Arrays.stream(Character.values()).forEach(a -> checkedMap.put(a, new SimpleBooleanProperty()));
         CheckListView<Character> list = new CheckListView<>(FXCollections.observableArrayList(Character.values()));
