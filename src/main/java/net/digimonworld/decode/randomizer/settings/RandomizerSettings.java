@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
+import de.phoenixstaffel.decodetools.core.Tuple;
 import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
 import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
 import javafx.geometry.Insets;
@@ -36,7 +37,7 @@ public class RandomizerSettings {
     }
     
     public List<Tab> create(GlobalKeepData inputData, LanguageKeep languageKeep) {
-        return getSettingsMap().entrySet().stream().map(a -> {
+        return getSettingsMap().stream().map(a -> {
             FlowPane generalPane = new FlowPane();
             generalPane.setVgap(10);
             generalPane.setHgap(10);
@@ -51,11 +52,9 @@ public class RandomizerSettings {
         }).collect(Collectors.toList());
     }
     
-    private Map<String, List<Setting>> getSettingsMap() {
-        return Map.of("General",
-                      Arrays.asList(digimonSettings, evolutionSettings, skillSettings, worldSettings, patchSettings),
-                      "New Game",
-                      Arrays.asList(starterSettings, playerSettings));
+    private List<Tuple<String, List<Setting>>> getSettingsMap() {
+        return List.of(Tuple.of("General", Arrays.asList(digimonSettings, evolutionSettings, skillSettings, worldSettings, patchSettings)),
+                       Tuple.of("New Game", Arrays.asList(starterSettings, playerSettings)));
     }
     
     public Map<String, Object> serialize() {

@@ -44,7 +44,7 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("MainWindow.fxml"));
         stage.setScene(loader.load());
-        stage.setTitle("Digimon World Re:Digitize Decode Randomizer v0.0.1");
+        stage.setTitle("Digimon World Re:Digitize Decode Randomizer");
         stage.show();
     }
     
