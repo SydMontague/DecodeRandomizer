@@ -6,6 +6,10 @@
 /.project
 /.settings/
 
+# Build stuff
+/rebuild*
+/rando*
+
 # Testing stuff
 config.yml
 *.cci

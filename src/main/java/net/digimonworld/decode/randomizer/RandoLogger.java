@@ -76,4 +76,8 @@ public class RandoLogger implements AutoCloseable {
     public void close() throws Exception {
         logger.close();
     }
+    
+    public boolean isRaceLogging() {
+        return raceLogging;
+    }
 }

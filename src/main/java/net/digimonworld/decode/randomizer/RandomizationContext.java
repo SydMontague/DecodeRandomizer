@@ -70,4 +70,9 @@ public class RandomizationContext implements AutoCloseable {
     public void close() throws Exception {
         logger.close();
     }
+
+    public boolean isRaceLogging() {
+        return logger.isRaceLogging();
+    }
+    
 }

@@ -1,11 +1,14 @@
 package net.digimonworld.decode.randomizer.settings;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.amihaiemil.eoyaml.Yaml;
 import com.amihaiemil.eoyaml.YamlMapping;
 
 import de.phoenixstaffel.decodetools.core.Tuple;
@@ -15,6 +18,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Tab;
 import javafx.scene.layout.FlowPane;
+import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 
 public class RandomizerSettings {
@@ -27,6 +31,8 @@ public class RandomizerSettings {
     private PlayerSettings playerSettings = new PlayerSettings();
     
     public void randomize(RandomizationContext context) {
+        logSettings(context);
+        
         skillSettings.randomize(context);
         digimonSettings.randomize(context);
         evolutionSettings.randomize(context);
@@ -36,6 +42,26 @@ public class RandomizerSettings {
         playerSettings.randomize(context);
     }
     
+    private void logSettings(RandomizationContext context) {
+        context.logLine(LogLevel.ALWAYS, "Randomizer Settings: ");
+        
+        Map<String, Object> configMap = new HashMap<>();
+        configMap.put("seed", context.getInitialSeed());
+        configMap.put("settings", serialize());
+        configMap.put("raceLogging", context.isRaceLogging());
+        
+        try (StringWriter writer = new StringWriter()) {
+            Yaml.createYamlPrinter(writer).print(Yaml.createYamlDump(configMap).dump());
+            context.logLine(LogLevel.ALWAYS, writer.toString());
+        }
+        catch (IOException e) {
+            // should never happen
+            e.printStackTrace();
+        }
+        
+        context.logLine(LogLevel.ALWAYS, "");        
+    }
+
     public List<Tab> create(GlobalKeepData inputData, LanguageKeep languageKeep) {
         return getSettingsMap().stream().map(a -> {
             FlowPane generalPane = new FlowPane();

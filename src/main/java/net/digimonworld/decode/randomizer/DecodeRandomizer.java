@@ -24,11 +24,11 @@ import javafx.stage.Stage;
  *  - priority randomization (rookies)
  */
 
-public class App extends Application {
-    private static App instance;
+public class DecodeRandomizer extends Application {
+    private static DecodeRandomizer instance;
     
-    public App() {
-        synchronized (App.class) {
+    public DecodeRandomizer() {
+        synchronized (DecodeRandomizer.class) {
             if (instance == null)
                 instance = this;
             else
@@ -36,13 +36,13 @@ public class App extends Application {
         }
     }
     
-    public static App getInstance() {
+    public static DecodeRandomizer getInstance() {
         return instance;
     }
     
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("MainWindow.fxml"));
+        FXMLLoader loader = new FXMLLoader(DecodeRandomizer.class.getResource("MainWindow.fxml"));
         stage.setScene(loader.load());
         stage.setTitle("Digimon World Re:Digitize Decode Randomizer");
         stage.show();
