@@ -63,6 +63,11 @@
                            </Button>
                         </children>
                      </HBox>
+                     <ToggleSwitch fx:id="dryFire" layoutX="45.0" layoutY="116.0" text="Dry Fire">
+                        <tooltip>
+                           <Tooltip text="Only creates the log for the current settings." />
+                        </tooltip>
+                     </ToggleSwitch>
                   </children>
                   <padding>
                      <Insets bottom="14.0" left="14.0" right="14.0" top="14.0" />

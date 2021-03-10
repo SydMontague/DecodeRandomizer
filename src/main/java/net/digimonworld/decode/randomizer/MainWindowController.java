@@ -64,6 +64,8 @@ public class MainWindowController {
     private TabPane settingsPane;
     @FXML
     private ToggleSwitch raceLogging;
+    @FXML
+    private ToggleSwitch dryFire;
     
     private RandomizerSettings settings = new RandomizerSettings();
     
@@ -162,6 +164,7 @@ public class MainWindowController {
         
         long seed = parseSeed(seedField.getText());
         Path modFolder = Files.createTempDirectory(Paths.get("."), "rando");
+        boolean isDryFire = dryFire.isSelected();
         
         Alert alert = new Alert(AlertType.NONE);
         alert.setTitle("Rebuilding ROM...");
@@ -177,7 +180,7 @@ public class MainWindowController {
             catch (Exception e1) {
                 e1.printStackTrace();
             }
-        }).thenApplyAsync(a -> Randomizer.rebuild3DS(WORKING_PATH, outputFile, List.of(modFolder))).thenAccept(a -> Platform.runLater(() -> {
+        }).thenApplyAsync(a -> isDryFire || Randomizer.rebuild3DS(WORKING_PATH, outputFile, List.of(modFolder))).thenAccept(a -> Platform.runLater(() -> {
             alert.setResult(ButtonType.FINISH);
             if (!a.booleanValue())
                 JavaFXUtils.showAndWaitAlert(AlertType.ERROR, "Error while rebuilding ROM", null, "Error while rebuilding ROM.");
