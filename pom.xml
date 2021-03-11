@@ -13,6 +13,14 @@
     <javafx.version>15.0.1</javafx.version>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>github</id>
+      <name>GitHub DecodeTools Packages</name>
+      <url>https://maven.pkg.github.com/SydMontague/DecodeTools</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>org.openjfx</groupId>
@@ -57,7 +65,7 @@
         <filtering>true</filtering>
       </resource>
     </resources>
-    <finalName>Decode-Randomizer-${project.version}</finalName>
+    <finalName>Decode-Randomizer</finalName>
 
     <plugins>
 
