@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import de.phoenixstaffel.decodetools.keepdata.Digimon;
-import de.phoenixstaffel.decodetools.keepdata.EnemyData;
-import de.phoenixstaffel.decodetools.keepdata.EnemyData.ItemDrop;
-import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
-import de.phoenixstaffel.decodetools.keepdata.Item;
-import de.phoenixstaffel.decodetools.keepdata.Item.ItemType;
-import de.phoenixstaffel.decodetools.keepdata.enums.DropType;
+import net.digimonworld.decodetools.keepdata.Digimon;
+import net.digimonworld.decodetools.keepdata.EnemyData;
+import net.digimonworld.decodetools.keepdata.EnemyData.ItemDrop;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.Item;
+import net.digimonworld.decodetools.keepdata.Item.ItemType;
+import net.digimonworld.decodetools.keepdata.enums.DropType;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 

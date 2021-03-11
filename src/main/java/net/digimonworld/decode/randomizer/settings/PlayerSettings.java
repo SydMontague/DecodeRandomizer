@@ -13,8 +13,8 @@ import org.controlsfx.control.CheckListView;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
-import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;

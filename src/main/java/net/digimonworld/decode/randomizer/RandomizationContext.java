@@ -6,12 +6,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.phoenixstaffel.decodetools.core.Access;
-import de.phoenixstaffel.decodetools.core.FileAccess;
-import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
-import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
-import de.phoenixstaffel.decodetools.res.ResPayload;
-import de.phoenixstaffel.decodetools.res.kcap.AbstractKCAP;
+import net.digimonworld.decodetools.core.Access;
+import net.digimonworld.decodetools.core.FileAccess;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.res.ResPayload;
+import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 
 public class RandomizationContext implements AutoCloseable {

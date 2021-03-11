@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import com.amihaiemil.eoyaml.Yaml;
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import de.phoenixstaffel.decodetools.core.Tuple;
-import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
-import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.core.Tuple;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Tab;

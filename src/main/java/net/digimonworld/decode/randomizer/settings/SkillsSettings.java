@@ -8,12 +8,12 @@ import java.util.Random;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import de.phoenixstaffel.decodetools.keepdata.Finisher;
-import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
-import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
-import de.phoenixstaffel.decodetools.keepdata.Skill;
-import de.phoenixstaffel.decodetools.keepdata.enums.MoveKind;
-import de.phoenixstaffel.decodetools.keepdata.enums.Status;
+import net.digimonworld.decodetools.keepdata.Finisher;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.keepdata.Skill;
+import net.digimonworld.decodetools.keepdata.enums.MoveKind;
+import net.digimonworld.decodetools.keepdata.enums.Status;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;

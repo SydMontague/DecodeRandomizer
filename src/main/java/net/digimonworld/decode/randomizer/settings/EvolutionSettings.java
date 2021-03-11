@@ -18,17 +18,17 @@ import java.util.stream.Collectors;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import de.phoenixstaffel.decodetools.keepdata.Digimon;
-import de.phoenixstaffel.decodetools.keepdata.DigimonRaising;
-import de.phoenixstaffel.decodetools.keepdata.EvoRequirement;
-import de.phoenixstaffel.decodetools.keepdata.EvoRequirement.Comperator;
-import de.phoenixstaffel.decodetools.keepdata.EvoRequirement.Operator;
-import de.phoenixstaffel.decodetools.keepdata.EvoRequirement.Requirement;
-import de.phoenixstaffel.decodetools.keepdata.EvoRequirement.SuperGroup;
-import de.phoenixstaffel.decodetools.keepdata.EvoRequirement.Type;
-import de.phoenixstaffel.decodetools.keepdata.GlobalKeepData;
-import de.phoenixstaffel.decodetools.keepdata.LanguageKeep;
-import de.phoenixstaffel.decodetools.keepdata.enums.Level;
+import net.digimonworld.decodetools.keepdata.Digimon;
+import net.digimonworld.decodetools.keepdata.DigimonRaising;
+import net.digimonworld.decodetools.keepdata.EvoRequirement;
+import net.digimonworld.decodetools.keepdata.EvoRequirement.Comperator;
+import net.digimonworld.decodetools.keepdata.EvoRequirement.Operator;
+import net.digimonworld.decodetools.keepdata.EvoRequirement.Requirement;
+import net.digimonworld.decodetools.keepdata.EvoRequirement.SuperGroup;
+import net.digimonworld.decodetools.keepdata.EvoRequirement.Type;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.keepdata.enums.Level;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;

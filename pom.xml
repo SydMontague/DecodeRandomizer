@@ -43,9 +43,9 @@
     </dependency>
 
     <dependency>
-      <groupId>de.phoenixstaffel</groupId>
+      <groupId>net.digimonworld</groupId>
       <artifactId>decodetools</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
