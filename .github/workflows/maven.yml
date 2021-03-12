@@ -11,7 +11,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        packageName: [Linux, Windows, MacOS]
+        include:
+        - os: ubuntu-latest
+          packageName: Linux
+        - os: windows-latest
+          packageName: Windows
+        - os: macos-latest
+          packageName: MacOS
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
