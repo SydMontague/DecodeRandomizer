@@ -6,7 +6,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build-linux:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -14,10 +14,25 @@ jobs:
         include:
         - os: ubuntu-latest
           packageName: Linux
+          URL_ARMIPS: https://github.com/SydMontague/armips/releases/download/v0.11.0/armips_linux64
+          FILE_3DSTOOL: "3dstool_linux_x86_64.tar.gz"
+          URL_3DSTEX: https://github.com/Cruel/3dstex/releases/download/1.1/3dstex-linux-x64
+          executableExtension: ""
+          wgetPath: "wget"
         - os: windows-latest
           packageName: Windows
+          URL_ARMIPS: https://github.com/SydMontague/armips/releases/download/v0.11.0/armips_win64.exe
+          FILE_3DSTOOL: "3dstool.zip"
+          URL_3DSTEX: https://github.com/Cruel/3dstex/releases/download/1.1/3dstex-win-x86.exe
+          executableExtension: ".exe"
+          wgetPath: "C:\\msys64\\usr\\bin\\wget.exe"
         - os: macos-latest
           packageName: MacOS
+          URL_ARMIPS: https://github.com/SydMontague/armips/releases/download/v0.11.0/armips_macos
+          FILE_3DSTOOL: "3dstool_macos_x86_64.tar.gz"
+          URL_3DSTEX: https://github.com/Cruel/3dstex/releases/download/1.1/3dstex-osx-x64
+          executableExtension: ""
+          wgetPath: "wget"
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
@@ -28,7 +43,20 @@ jobs:
       run: | 
         echo "<settings><servers><server><id>github</id><username>${{ secrets.USERNAME }}</username><password>${{ secrets.TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
         mvn -B package --file pom.xml
-    - uses: actions/upload-artifact@v1
+    - name: Download Dependencies
+      run: |
+        ${{matrix.wgetPath}} -O target/armips${{matrix.executableExtension}} ${{matrix.URL_ARMIPS}}
+        ${{matrix.wgetPath}} -O target/3dstex${{matrix.executableExtension}} ${{matrix.URL_3DSTEX}}
+        ${{matrix.wgetPath}} -P target/ https://github.com/dnasdw/3dstool/releases/download/v1.2.6/${{matrix.FILE_3DSTOOL}}
+    - uses: brunoborges/justextract@master
+      with:
+        file: target/${{ matrix.FILE_3DSTOOL }}
+    - run: mv 3dstool${{matrix.executableExtension}} target/
+    - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.packageName }}
-        path: target/Decode-Randomizer.jar
+        path: | 
+          target/Decode-Randomizer.jar
+          target/armips${{matrix.executableExtension}}
+          target/3dstex${{matrix.executableExtension}}
+          target/3dstool${{matrix.executableExtension}}
