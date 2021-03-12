@@ -8,9 +8,10 @@ on:
 jobs:
   build-linux:
     runs-on: ${{ matrix.os }}
-    matrix:
-      os: [ubuntu-latest, windows-latest, macos-latest]
-      packageName: [Linux, Windows, MacOS]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        packageName: [Linux, Windows, MacOS]
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
