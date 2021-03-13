@@ -19,15 +19,6 @@ import org.controlsfx.control.ToggleSwitch;
 import com.amihaiemil.eoyaml.Yaml;
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import net.digimonworld.decodetools.core.Access;
-import net.digimonworld.decodetools.core.DeleteDirectoryFileVisitor;
-import net.digimonworld.decodetools.core.FileAccess;
-import net.digimonworld.decodetools.core.Utils;
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
-import net.digimonworld.decodetools.randomizer.Randomizer;
-import net.digimonworld.decodetools.res.ResPayload;
-import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,12 +30,22 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import net.digimonworld.decode.randomizer.settings.RandomizerSettings;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decodetools.core.Access;
+import net.digimonworld.decodetools.core.DeleteDirectoryFileVisitor;
+import net.digimonworld.decodetools.core.FileAccess;
+import net.digimonworld.decodetools.core.Utils;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.randomizer.Randomizer;
+import net.digimonworld.decodetools.res.ResPayload;
+import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
 
 public class MainWindowController {
     private static final ExtensionFilter CCIFilter = new ExtensionFilter("3DS (for Citra)", "*.3ds", "*.cci");
@@ -54,6 +55,8 @@ public class MainWindowController {
     
     @FXML
     private Scene root;
+    @FXML
+    private BorderPane rootPane;
     @FXML
     private TextField outputField;
     @FXML
@@ -74,11 +77,12 @@ public class MainWindowController {
     
     @FXML
     public void initialize() {
-        updatedRomStatus();
+        Platform.runLater(this::updatedRomStatus);
     }
     
     private void updateSettings() {
         settingsPane.getTabs().setAll(settings.create(inputData, languageKeep));
+        root.getWindow().sizeToScene();
     }
     
     @FXML
@@ -246,15 +250,25 @@ public class MainWindowController {
         romFoundSymbol.setTextFill(exists ? Color.GREEN : Color.RED);
         
         if (exists) {
-            try (Access access = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/GlobalKeepData.res").toFile());
-                    Access access2 = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/LanguageKeep_jp.res").toFile())) {
-                this.inputData = new GlobalKeepData((AbstractKCAP) ResPayload.craft(access));
-                this.languageKeep = new LanguageKeep((AbstractKCAP) ResPayload.craft(access2));
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            updateSettings();
+            Alert alert = new Alert(AlertType.NONE);
+            alert.setTitle("Loading Data...");
+            alert.setHeaderText(null);
+            alert.setContentText("Loading Data. This might take a few seconds.");
+            alert.show();
+            
+            CompletableFuture.runAsync(() -> {
+                try (Access access = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/GlobalKeepData.res").toFile());
+                        Access access2 = new FileAccess(WORKING_PATH.resolve("part0/arcv/Keep/LanguageKeep_jp.res").toFile())) {
+                    this.inputData = new GlobalKeepData((AbstractKCAP) ResPayload.craft(access));
+                    this.languageKeep = new LanguageKeep((AbstractKCAP) ResPayload.craft(access2));
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).thenRun(() -> Platform.runLater(() -> {
+                updateSettings();
+                alert.setResult(ButtonType.FINISH);
+            }));
         }
     }
 }

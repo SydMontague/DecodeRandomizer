@@ -18,7 +18,7 @@
 <?import org.controlsfx.control.ToggleSwitch?>
 
 <Scene fx:id="root" stylesheets="@main.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.digimonworld.decode.randomizer.MainWindowController">
-   <BorderPane minWidth="600.0">
+   <BorderPane fx:id="rootPane" minWidth="600.0">
       <center>
          <SplitPane dividerPositions="0.0" orientation="VERTICAL">
             <items>

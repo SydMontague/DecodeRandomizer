@@ -4,9 +4,6 @@ import java.io.IOException;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
 
 /*
@@ -45,18 +42,10 @@ public class DecodeRandomizer extends Application {
     
     @Override
     public void start(Stage stage) throws IOException {
-        Alert alert = new Alert(AlertType.NONE);
-        alert.setTitle("Loading data, please wait...");
-        alert.setHeaderText(null);
-        alert.setContentText(null);
-        alert.show();
-        
         FXMLLoader loader = new FXMLLoader(DecodeRandomizer.class.getResource("MainWindow.fxml"));
         stage.setScene(loader.load());
         stage.setTitle("Digimon World Re:Digitize Decode Randomizer");
         stage.show();
-        
-        alert.setResult(ButtonType.FINISH);
     }
     
     public static void main(String[] args) {
