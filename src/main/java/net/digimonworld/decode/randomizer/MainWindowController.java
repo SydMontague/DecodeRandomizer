@@ -153,6 +153,15 @@ public class MainWindowController {
                     e1.printStackTrace();
                 }
             }
+            
+            if(Files.notExists(WORKING_PATH.resolve("part0/plain.bin")))
+                try {
+                    Files.write(WORKING_PATH.resolve("part0/plain.bin"), new byte[512]);
+                }
+                catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            
             updatedRomStatus();
         }));
     }

@@ -30,6 +30,7 @@ public class PatchSettings implements Setting {
     private BooleanProperty patchViewDistance = new SimpleBooleanProperty();
     private BooleanProperty patchBrainsChance = new SimpleBooleanProperty();
     private DoubleProperty patchBrainsChanceFactor = new SimpleDoubleProperty();
+    private BooleanProperty patchStartMPDisc = new SimpleBooleanProperty();
     
     @Override
     public TitledPane create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -59,6 +60,9 @@ public class PatchSettings implements Setting {
                                                   Optional.of("Increases view distance, allowing to see Digimon from a further distance."),
                                                   Optional.of(patchViewDistance)),
                     JavaFXUtils.buildToggleSwitch("Brain Learn Chance", Optional.empty(), Optional.of(patchBrainsChance)),
+                    JavaFXUtils.buildToggleSwitch("Start with MP Disc",
+                                                  Optional.of("Replaces the starting Meat with MP Discs.\nStrongly recommended when playing with randomized MP costs!"),
+                                                  Optional.of(patchStartMPDisc)),
                     new HBox(brainChanceSlider, lbl));
         return pane;
     }
@@ -69,7 +73,15 @@ public class PatchSettings implements Setting {
             patchViewDistance(context);
         if (patchBrainsChance.get())
             patchBrainsChance(context);
+        if (patchStartMPDisc.get())
+            patchStartMPDisc(context);
+    }
+    
+    private void patchStartMPDisc(RandomizationContext context) {
+        context.logLine(LogLevel.ALWAYS, "Patching starting MP Disc...");
         
+        context.addASM(".org 0x27AD7C");
+        context.addASM("MOV R0, #5");
     }
     
     private void patchBrainsChance(RandomizationContext context) {
@@ -104,6 +116,7 @@ public class PatchSettings implements Setting {
         map.put("patchViewDistance", patchViewDistance.get());
         map.put("patchBrainsChance", patchBrainsChance.get());
         map.put("patchBrainsChanceFactor", patchBrainsChanceFactor.get());
+        map.put("patchStartMPDisc", patchStartMPDisc.get());
         
         return map;
     }
@@ -116,6 +129,7 @@ public class PatchSettings implements Setting {
         this.patchViewDistance.set(Boolean.parseBoolean(map.string("patchViewDistance")));
         this.patchBrainsChance.set(Boolean.parseBoolean(map.string("patchBrainsChance")));
         this.patchBrainsChanceFactor.set(map.doubleNumber("patchBrainsChanceFactor"));
+        this.patchStartMPDisc.set(Boolean.parseBoolean(map.string("patchStartMPDisc")));
     }
     
 }

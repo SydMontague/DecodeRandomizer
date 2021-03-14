@@ -59,9 +59,16 @@ After the ROM has been successfully unpacked you'll be presented with the random
 ## Patches
 * Increased View Distance
 * Increase Skill learning from brains training
+* Start with 5 MP Discs instead of Meat
+  * to help with running out of MP in the first fight
+
+## Known Issues / Caveats
+Certain seed/settings combinations might be unplayable, for example if your starting move is too weak/expensive or if your Digimon is scaled too large to be able to hit.
+Use another seed or disable the respective settings to solve this.
 
 # Planned Features
 * Item Spawn randomization
+* more fine control for everything
 
 # Contact
 * Discord: SydMontague#8056, or in the [Digimon Discord Community](https://discord.gg/0VODO3ww0zghqOCO)
