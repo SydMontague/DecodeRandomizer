@@ -59,7 +59,10 @@ After the ROM has been successfully unpacked you'll be presented with the random
 ## Patches
 * Increased View Distance
 * Increase Skill learning from brains training
- 
+
+# Planned Features
+* Item Spawn randomization
+
 # Contact
 * Discord: SydMontague#8056, or in the [Digimon Discord Community](https://discord.gg/0VODO3ww0zghqOCO)
 * directly on GitHub
