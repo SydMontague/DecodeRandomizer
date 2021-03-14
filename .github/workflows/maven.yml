@@ -48,6 +48,10 @@ jobs:
         ${{matrix.wgetPath}} -O target/armips${{matrix.executableExtension}} ${{matrix.URL_ARMIPS}}
         ${{matrix.wgetPath}} -O target/3dstex${{matrix.executableExtension}} ${{matrix.URL_3DSTEX}}
         ${{matrix.wgetPath}} -P target/ https://github.com/dnasdw/3dstool/releases/download/v1.2.6/${{matrix.FILE_3DSTOOL}}
+    - name: Copy Licenses
+      run: |
+        cp LICENSE target/licenses/LICENSE
+        cp THIRD-PARTY-NOTICE target/licenses/THIRD-PARTY-NOTICE
     - uses: brunoborges/justextract@master
       with:
         file: target/${{ matrix.FILE_3DSTOOL }}
@@ -60,3 +64,4 @@ jobs:
           target/armips${{matrix.executableExtension}}
           target/3dstex${{matrix.executableExtension}}
           target/3dstool${{matrix.executableExtension}}
+          target/licenses/*
