@@ -50,6 +50,7 @@ jobs:
         ${{matrix.wgetPath}} -P target/ https://github.com/dnasdw/3dstool/releases/download/v1.2.6/${{matrix.FILE_3DSTOOL}}
     - name: Copy Licenses
       run: |
+        mkdir target/licenses
         cp LICENSE target/licenses/LICENSE
         cp THIRD-PARTY-NOTICE target/licenses/THIRD-PARTY-NOTICE
     - uses: brunoborges/justextract@master
