@@ -28,16 +28,16 @@ import net.digimonworld.decodetools.res.payload.GenericPayload;
 public class PatchSettings implements Setting {
     
     // TODO evo priority
-    // TODO walk speed?
     // TODO faster menus/training
     // TODO increase MP recovery rate
-    // TODO buff NPC stats in final battle
+    // TODO remove intro cutscene
     
     private BooleanProperty patchViewDistance = new SimpleBooleanProperty();
     private BooleanProperty patchBrainsChance = new SimpleBooleanProperty();
     private DoubleProperty patchBrainsChanceFactor = new SimpleDoubleProperty();
     private BooleanProperty patchStartMPDisc = new SimpleBooleanProperty();
     private BooleanProperty patchDisable90FBattles = new SimpleBooleanProperty();
+    private BooleanProperty patchMovementSpeed = new SimpleBooleanProperty();
     
     @Override
     public TitledPane create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -66,14 +66,17 @@ public class PatchSettings implements Setting {
             .addAll(JavaFXUtils.buildToggleSwitch("View Distance",
                                                   Optional.of("Increases view distance, allowing to see Digimon from a further distance."),
                                                   Optional.of(patchViewDistance)),
+                    JavaFXUtils.buildToggleSwitch("Double Movement Speed",
+                                                  Optional.of("Doubles running speed of player and enenmies."),
+                                                  Optional.of(patchMovementSpeed)),
                     JavaFXUtils.buildToggleSwitch("Brain Learn Chance", Optional.empty(), Optional.of(patchBrainsChance)),
+                    new HBox(brainChanceSlider, lbl),
                     JavaFXUtils.buildToggleSwitch("Start with MP Disc",
                                                   Optional.of("Replaces the starting Meat with MP Discs.\nStrongly recommended when playing with randomized MP costs!"),
                                                   Optional.of(patchStartMPDisc)),
                     JavaFXUtils.buildToggleSwitch("Skip 90F Battles",
                                                   Optional.of("Disabled the battles on 90F where you control your allies.\nThis is useful to prevent these fight from being unwinnable."),
-                                                  Optional.of(patchDisable90FBattles)),
-                    new HBox(brainChanceSlider, lbl));
+                                                  Optional.of(patchDisable90FBattles)));
         return pane;
     }
     
@@ -87,6 +90,23 @@ public class PatchSettings implements Setting {
             patchStartMPDisc(context);
         if (patchDisable90FBattles.get())
             disable90FBattles(context);
+        if (patchMovementSpeed.get())
+            patchMovementSpeed(context);
+    }
+    
+    private void patchMovementSpeed(RandomizationContext context) {
+        context.logLine(LogLevel.ALWAYS, "Patching running speed...");
+        
+        float newRunSpeed = 50f * 1.5f;
+        float newWalkSpeed = 21f;
+        float newEnemySpeed = 57.5f * 1.5f;
+        
+        context.addASM(".org 0x44B8B8");
+        context.addASM(String.format(Locale.US, ".float %5.3f", newRunSpeed));
+        context.addASM(String.format(Locale.US, ".float %5.3f", newWalkSpeed));
+        
+        context.addASM(".org 0x2FDCE8");
+        context.addASM(String.format(Locale.US, ".float %5.3f", newEnemySpeed));
     }
     
     private void disable90FBattles(RandomizationContext context) {
@@ -139,7 +159,8 @@ public class PatchSettings implements Setting {
         map.put("patchBrainsChance", patchBrainsChance.get());
         map.put("patchBrainsChanceFactor", patchBrainsChanceFactor.get());
         map.put("patchStartMPDisc", patchStartMPDisc.get());
-        map.put("patchDisable90FBattles", patchDisable90FBattles);
+        map.put("patchDisable90FBattles", patchDisable90FBattles.get());
+        map.put("patchMovementSpeed", patchMovementSpeed.get());
         
         return map;
     }
@@ -154,6 +175,7 @@ public class PatchSettings implements Setting {
         this.patchBrainsChanceFactor.set(map.doubleNumber("patchBrainsChanceFactor"));
         this.patchStartMPDisc.set(Boolean.parseBoolean(map.string("patchStartMPDisc")));
         this.patchDisable90FBattles.set(Boolean.parseBoolean(map.string("patchDisable90FBattles")));
+        this.patchMovementSpeed.set(Boolean.parseBoolean(map.string("patchMovementSpeed")));
     }
     
 }
