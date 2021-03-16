@@ -31,6 +31,8 @@ import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
 
 public class StarterSettings implements Setting {
     
+    // TODO adjust lifespan
+    
     private class DigimonEntry {
         int id;
         String name;

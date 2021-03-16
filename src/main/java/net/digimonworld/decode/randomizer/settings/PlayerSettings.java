@@ -29,6 +29,8 @@ import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
 public class PlayerSettings implements Setting {
     // TODO pronouns, requires translation patch 1.1
     // TODO cutins, see 0x4D8624 and 0x4D8628 | requires target value to have _01 to _10, otherwise the game will crash when trying to load those
+    // TODO voice?
+    
     
     private BooleanProperty enabled = new SimpleBooleanProperty();
     private Map<Character, BooleanProperty> checkedMap = new EnumMap<>(Character.class);

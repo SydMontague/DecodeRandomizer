@@ -7,8 +7,6 @@ import java.util.Optional;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -19,18 +17,27 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
+import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decodetools.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
+import net.digimonworld.decodetools.res.payload.GenericPayload;
 
 public class PatchSettings implements Setting {
     
     // TODO evo priority
+    // TODO walk speed?
+    // TODO faster menus/training
+    // TODO increase MP recovery rate
+    // TODO buff NPC stats in final battle
     
     private BooleanProperty patchViewDistance = new SimpleBooleanProperty();
     private BooleanProperty patchBrainsChance = new SimpleBooleanProperty();
     private DoubleProperty patchBrainsChanceFactor = new SimpleDoubleProperty();
     private BooleanProperty patchStartMPDisc = new SimpleBooleanProperty();
+    private BooleanProperty patchDisable90FBattles = new SimpleBooleanProperty();
     
     @Override
     public TitledPane create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -63,6 +70,9 @@ public class PatchSettings implements Setting {
                     JavaFXUtils.buildToggleSwitch("Start with MP Disc",
                                                   Optional.of("Replaces the starting Meat with MP Discs.\nStrongly recommended when playing with randomized MP costs!"),
                                                   Optional.of(patchStartMPDisc)),
+                    JavaFXUtils.buildToggleSwitch("Skip 90F Battles",
+                                                  Optional.of("Disabled the battles on 90F where you control your allies.\nThis is useful to prevent these fight from being unwinnable."),
+                                                  Optional.of(patchDisable90FBattles)),
                     new HBox(brainChanceSlider, lbl));
         return pane;
     }
@@ -75,6 +85,18 @@ public class PatchSettings implements Setting {
             patchBrainsChance(context);
         if (patchStartMPDisc.get())
             patchStartMPDisc(context);
+        if (patchDisable90FBattles.get())
+            disable90FBattles(context);
+    }
+    
+    private void disable90FBattles(RandomizationContext context) {
+        context.logLine(LogLevel.ALWAYS, "Patching out 90F battle...");
+        
+        context.getFile("part0/arcv/map/are90.res").ifPresent(a -> {
+            byte[] data = ((GenericPayload) ((AbstractKCAP) a).get(0)).getData();
+            data[0x30D8] = 0x7D; // JZ -> J
+            data[0x30D9] = 0x60; // 101 -> 96
+        });
     }
     
     private void patchStartMPDisc(RandomizationContext context) {
@@ -117,6 +139,7 @@ public class PatchSettings implements Setting {
         map.put("patchBrainsChance", patchBrainsChance.get());
         map.put("patchBrainsChanceFactor", patchBrainsChanceFactor.get());
         map.put("patchStartMPDisc", patchStartMPDisc.get());
+        map.put("patchDisable90FBattles", patchDisable90FBattles);
         
         return map;
     }
@@ -130,6 +153,7 @@ public class PatchSettings implements Setting {
         this.patchBrainsChance.set(Boolean.parseBoolean(map.string("patchBrainsChance")));
         this.patchBrainsChanceFactor.set(map.doubleNumber("patchBrainsChanceFactor"));
         this.patchStartMPDisc.set(Boolean.parseBoolean(map.string("patchStartMPDisc")));
+        this.patchDisable90FBattles.set(Boolean.parseBoolean(map.string("patchDisable90FBattles")));
     }
     
 }
