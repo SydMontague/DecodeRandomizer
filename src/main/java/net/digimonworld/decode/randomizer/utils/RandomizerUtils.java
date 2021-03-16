@@ -25,7 +25,7 @@ public class RandomizerUtils {
             Item a = itr.next();
             
             // filter technical, unused and Mt. Infinity items
-            if (a.getType() == ItemType.BASE || a.getUnk30() == 0 || (a.getUnk31() & 65) != 0)
+            if (a.getType() == ItemType.BASE || a.getUnk30() == 0 || (a.getUnk30() & 64) != 0 || (a.getUnk31() & 1) != 0)
                 continue;
             
             itemList.add(i + 1);
