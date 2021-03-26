@@ -1,5 +1,8 @@
 package net.digimonworld.decode.randomizer.settings;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +14,17 @@ import org.controlsfx.control.ToggleSwitch;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.geometry.Pos;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.VBox;
+import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
+import net.digimonworld.decode.randomizer.RandomizationContext;
+import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decode.randomizer.utils.RandomizerUtils;
 import net.digimonworld.decodetools.core.MappedSet;
+import net.digimonworld.decodetools.core.StreamAccess;
 import net.digimonworld.decodetools.keepdata.Digimon;
 import net.digimonworld.decodetools.keepdata.EnemyData;
 import net.digimonworld.decodetools.keepdata.EnemyData.ItemDrop;
@@ -23,20 +36,17 @@ import net.digimonworld.decodetools.keepdata.TreasureLoot;
 import net.digimonworld.decodetools.keepdata.TypeAlignmentChart;
 import net.digimonworld.decodetools.keepdata.enums.DropType;
 import net.digimonworld.decodetools.keepdata.enums.Special;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Pos;
-import javafx.scene.control.TitledPane;
-import javafx.scene.layout.VBox;
-import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
-import net.digimonworld.decode.randomizer.RandomizationContext;
-import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
-import net.digimonworld.decode.randomizer.utils.RandomizerUtils;
+import net.digimonworld.decodetools.map.MapItemSpawns;
+import net.digimonworld.decodetools.map.MapItemSpawns.ItemSpawn;
+import net.digimonworld.decodetools.map.MapItemSpawns.MapItemSpawn;
+import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
+import net.digimonworld.decodetools.res.payload.GenericPayload;
 
 public class WorldSettings implements Setting {
     
     private BooleanProperty randomizeTypeEffectiveness = new SimpleBooleanProperty();
     private BooleanProperty randomizeTreasureHunt = new SimpleBooleanProperty();
+    private BooleanProperty randomizeItemSpawns = new SimpleBooleanProperty();
     
     private BooleanProperty randomizeEnemies = new SimpleBooleanProperty();
     private BooleanProperty randomizeEnemyStats = new SimpleBooleanProperty();
@@ -62,8 +72,9 @@ public class WorldSettings implements Setting {
         moves.disableProperty().bind(randomizeEnemies.not());
         loot.disableProperty().bind(randomizeEnemies.not());
         
-        vbox.getChildren().addAll(JavaFXUtils.buildToggleSwitch("Type Alignment", Optional.empty(), Optional.of(randomizeTypeEffectiveness)),
+        vbox.getChildren().addAll(JavaFXUtils.buildToggleSwitch("Type Effectiveness", Optional.empty(), Optional.of(randomizeTypeEffectiveness)),
                                   JavaFXUtils.buildToggleSwitch("Treasure Hunt", Optional.empty(), Optional.of(randomizeTreasureHunt)),
+                                  JavaFXUtils.buildToggleSwitch("Item Spawns", Optional.empty(), Optional.of(randomizeItemSpawns)),
                                   enemies,
                                   stats,
                                   digimon,
@@ -80,6 +91,75 @@ public class WorldSettings implements Setting {
             randomizeTreasureHunt(context);
         if (randomizeEnemies.get())
             randomizeEnemies(context);
+        if (randomizeItemSpawns.get())
+            randomizeItemSpawns(context);
+    }
+    
+    private void randomizeItemSpawns(RandomizationContext context) {
+        Random rand = new Random(context.getInitialSeed() * "ItemSpawns".hashCode());
+        
+        context.logLine(LogLevel.ALWAYS, "Randomizing Item Spawns...");
+        context.logLine(LogLevel.CASUAL, "");
+        
+        List<Integer> items = RandomizerUtils.getUseableItems(context.getGlobalKeepData());
+        Map<String, Integer> mapMap = readItemSpawnMapping();
+        
+        mapMap.forEach((a, b) -> {
+            String filePath = String.format("part0/arcv/map/%s.res", a);
+            context.getFile(filePath).ifPresent(m -> {
+                AbstractKCAP root = (AbstractKCAP) m;
+                AbstractKCAP map = (AbstractKCAP) root.get(1);
+                GenericPayload payload = (GenericPayload) map.get(b);
+                
+                @SuppressWarnings("resource")
+                MapItemSpawns mapSpawns = new MapItemSpawns(new StreamAccess(payload.getData()));
+                
+                context.logLine(LogLevel.CASUAL, String.format("=== %s old spawns: ===", a));
+                logItemSpawns(mapSpawns, context);
+                    
+                for (MapItemSpawn spawns : mapSpawns.getSpawns()) {
+                    int numItems = 1 + rand.nextInt(8);
+                    float chancePerItem = (0.1f + rand.nextFloat() * 0.9f) / numItems;
+                    
+                    for (int i = 0; i < 8; i++) {
+                        ItemSpawn spawn = spawns.getSpawns()[i];
+                        spawn.setChance(i < numItems ? chancePerItem : 0f);
+                        spawn.setItemId(i < numItems ? items.get(rand.nextInt(items.size())) : 0);
+                    }
+                }
+                
+                context.logLine(LogLevel.CASUAL, String.format("=== %s new spawns: ===", a));
+                logItemSpawns(mapSpawns, context);
+                    
+                payload.setData(mapSpawns.toByteArray());
+                context.logLine(LogLevel.CASUAL, "");
+            });
+        });
+    }
+    
+    private void logItemSpawns(MapItemSpawns mapSpawns, RandomizationContext context) {
+        for (MapItemSpawn spawns : mapSpawns.getSpawns())
+            for (ItemSpawn spawn : spawns.getSpawns())
+                context.logLine(LogLevel.CASUAL,
+                                String.format("%30s | %5.4f",
+                                              context.getLanguageKeep().getItemNames().getStringById(spawn.getItemId()),
+                                              spawn.getChance()));
+    }
+    
+    private Map<String, Integer> readItemSpawnMapping() {
+        Map<String, Integer> map = new HashMap<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(WorldSettings.class.getResourceAsStream("itemSpawnMapping.csv")))) {
+            String str;
+            while ((str = reader.readLine()) != null) {
+                String[] arr = str.split(",");
+                map.put(arr[0], Integer.parseInt(arr[1]));
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return map;
     }
     
     private void randomizeEnemies(RandomizationContext context) {
@@ -264,6 +344,7 @@ public class WorldSettings implements Setting {
         map.put("randomizeEnemyDigimon", randomizeEnemyDigimon.get());
         map.put("randomizeEnemyMoves", randomizeEnemyMoves.get());
         map.put("randomizeEnemyLoot", randomizeEnemyLoot.get());
+        map.put("randomizeItemSpawns", randomizeItemSpawns.get());
         
         return map;
     }
@@ -280,6 +361,7 @@ public class WorldSettings implements Setting {
         this.randomizeEnemyDigimon.set(Boolean.parseBoolean(map.string("randomizeEnemyDigimon")));
         this.randomizeEnemyMoves.set(Boolean.parseBoolean(map.string("randomizeEnemyMoves")));
         this.randomizeEnemyLoot.set(Boolean.parseBoolean(map.string("randomizeEnemyLoot")));
+        this.randomizeItemSpawns.set(Boolean.parseBoolean(map.string("randomizeItemSpawns")));
     }
     
 }

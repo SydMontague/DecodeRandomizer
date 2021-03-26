@@ -17,7 +17,6 @@ import javafx.stage.Stage;
  */
 
 /* TODO features
- * item spawns
  * 
  * patches
  *  - camera distance
