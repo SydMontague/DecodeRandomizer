@@ -71,7 +71,7 @@ Use another seed or disable the respective settings to solve this.
 * more fine control for everything
 
 # Contact
-* Discord: SydMontague#8056, or in the [Digimon Discord Community](https://discord.gg/0VODO3ww0zghqOCO)
+* Discord: SydMontague#8056, or in either the [Digimon Modding Community](https://discord.gg/cb5AuxU6su) or [Digimon Discord Community](https://discord.gg/0VODO3ww0zghqOCO)
 * directly on GitHub
 * E-Mail: sydmontague@web.de
 * Reddit: [/u/Sydmontague](https://reddit.com/u/sydmontague)
