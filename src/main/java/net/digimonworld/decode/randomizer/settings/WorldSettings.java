@@ -123,6 +123,11 @@ public class WorldSettings implements Setting {
                     
                     for (int i = 0; i < 8; i++) {
                         ItemSpawn spawn = spawns.getSpawns()[i];
+                        
+                        // don't randomize firewood
+                        if(spawn.getItemId() == 367)
+                            continue;
+                        
                         spawn.setChance(i < numItems ? chancePerItem : 0f);
                         spawn.setItemId(i < numItems ? items.get(rand.nextInt(items.size())) : 0);
                     }
