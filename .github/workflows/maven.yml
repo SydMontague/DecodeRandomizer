@@ -16,6 +16,8 @@ jobs:
           packageName: Linux
           URL_ARMIPS: https://github.com/SydMontague/armips/releases/download/v0.11.0/armips_linux64
           FILE_3DSTOOL: "3dstool_linux_x86_64.tar.gz"
+          FILE_CTRTOOL: "ctrtool-v0.7-ubuntu_x86_64.zip"
+          FILE_MAKEROM: "makerom-v0.17-ubuntu_x86_64.zip"
           URL_3DSTEX: https://github.com/Cruel/3dstex/releases/download/1.1/3dstex-linux-x64
           executableExtension: ""
           wgetPath: "wget"
@@ -23,6 +25,8 @@ jobs:
           packageName: Windows
           URL_ARMIPS: https://github.com/SydMontague/armips/releases/download/v0.11.0/armips_win64.exe
           FILE_3DSTOOL: "3dstool.zip"
+          FILE_CTRTOOL: "ctrtool-v0.7-win_x86_64.zip"
+          FILE_MAKEROM: "makerom-v0.17-win_x86_64.zip"
           URL_3DSTEX: https://github.com/Cruel/3dstex/releases/download/1.1/3dstex-win-x86.exe
           executableExtension: ".exe"
           wgetPath: "C:\\msys64\\usr\\bin\\wget.exe"
@@ -30,6 +34,8 @@ jobs:
           packageName: MacOS
           URL_ARMIPS: https://github.com/SydMontague/armips/releases/download/v0.11.0/armips_macos
           FILE_3DSTOOL: "3dstool_macos_x86_64.tar.gz"
+          FILE_CTRTOOL: "ctrtool-v0.7-macos_x86_64.zip"
+          FILE_MAKEROM: "makerom-v0.17-macos_x86_64.zip"
           URL_3DSTEX: https://github.com/Cruel/3dstex/releases/download/1.1/3dstex-osx-x64
           executableExtension: ""
           wgetPath: "wget"
@@ -48,15 +54,31 @@ jobs:
         ${{matrix.wgetPath}} -O target/armips${{matrix.executableExtension}} ${{matrix.URL_ARMIPS}}
         ${{matrix.wgetPath}} -O target/3dstex${{matrix.executableExtension}} ${{matrix.URL_3DSTEX}}
         ${{matrix.wgetPath}} -P target/ https://github.com/dnasdw/3dstool/releases/download/v1.2.6/${{matrix.FILE_3DSTOOL}}
+        ${{matrix.wgetPath}} -P target/ https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.17/${{matrix.FILE_MAKEROM}}
+        ${{matrix.wgetPath}} -P target/ https://github.com/3DSGuy/Project_CTR/releases/download/ctrtool-v0.7/${{matrix.FILE_CTRTOOL}}
     - name: Copy Licenses
       run: |
         mkdir target/licenses
         cp LICENSE target/licenses/LICENSE
         cp THIRD-PARTY-NOTICE target/licenses/THIRD-PARTY-NOTICE
+    
+    # extract archives
     - uses: brunoborges/justextract@master
       with:
         file: target/${{ matrix.FILE_3DSTOOL }}
     - run: mv 3dstool${{matrix.executableExtension}} target/
+    
+    - uses: brunoborges/justextract@master
+      with:
+        file: target/${{ matrix.FILE_MAKEROM }}
+    - run: mv makerom${{matrix.executableExtension}} target/
+    
+    - uses: brunoborges/justextract@master
+      with:
+        file: target/${{ matrix.FILE_CTRTOOL }}
+    - run: mv ctrtool${{matrix.executableExtension}} target/
+    
+    # upload artifact
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.packageName }}
@@ -65,4 +87,6 @@ jobs:
           target/armips${{matrix.executableExtension}}
           target/3dstex${{matrix.executableExtension}}
           target/3dstool${{matrix.executableExtension}}
+          target/makerom${{matrix.executableExtension}}
+          target/ctrtool${{matrix.executableExtension}}
           target/licenses/*

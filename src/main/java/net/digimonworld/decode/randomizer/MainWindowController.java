@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import org.controlsfx.control.ToggleSwitch;
 
@@ -127,18 +128,13 @@ public class MainWindowController {
         if (selected == null)
             return;
         
-        if (chooser.getSelectedExtensionFilter() == CIAFilter) {
-            System.out.println("CIA is not yet supported.");
-            return;
-        }
-        
         Alert alert = new Alert(AlertType.NONE);
         alert.setTitle("Extracting ROM...");
         alert.setHeaderText(null);
         alert.setContentText("Extracting ROM. This might take a minute.");
         alert.show();
         
-        CompletableFuture.supplyAsync(() -> Randomizer.extract3DSFile(WORKING_PATH, selected.toPath())).thenAccept(a -> Platform.runLater(() -> {
+        CompletableFuture.supplyAsync(provideExtractionSupplier(chooser.getSelectedExtensionFilter(), WORKING_PATH, selected.toPath())).thenAccept(a -> Platform.runLater(() -> {
             alert.setResult(ButtonType.FINISH);
             if (!a.booleanValue()) {
                 JavaFXUtils.showAndWaitAlert(AlertType.ERROR,
@@ -154,7 +150,7 @@ public class MainWindowController {
                 }
             }
             
-            if(Files.notExists(WORKING_PATH.resolve("part0/plain.bin")))
+            if (Files.notExists(WORKING_PATH.resolve("part0/plain.bin")))
                 try {
                     Files.write(WORKING_PATH.resolve("part0/plain.bin"), new byte[512]);
                 }
@@ -164,6 +160,13 @@ public class MainWindowController {
             
             updatedRomStatus();
         }));
+    }
+    
+    private Supplier<Boolean> provideExtractionSupplier(ExtensionFilter filter, Path output, Path input) {
+        if (filter == CIAFilter)
+            return () -> Randomizer.extractCIAFile(output, input);
+        else
+            return () -> Randomizer.extract3DSFile(output, input);
     }
     
     @FXML
@@ -193,10 +196,10 @@ public class MainWindowController {
             catch (Exception e1) {
                 e1.printStackTrace();
             }
-        }).thenApplyAsync(a -> isDryFire || Randomizer.rebuild3DS(WORKING_PATH, outputFile, List.of(modFolder))).thenAccept(a -> Platform.runLater(() -> {
+        }).thenApplyAsync(a -> isDryFire || rebuildROM(WORKING_PATH, outputFile, List.of(modFolder))).thenAccept(a -> Platform.runLater(() -> {
             alert.setResult(ButtonType.FINISH);
             if (!a.booleanValue())
-                JavaFXUtils.showAndWaitAlert(AlertType.ERROR, "Error while rebuilding ROM", null, "Error while rebuilding ROM.");
+                JavaFXUtils.showAndWaitAlert(AlertType.ERROR, "Error while rebuilding ROM", null, "Error while rebuilding ROM.\nPlease keep in mind that .cia dumps can only rebuild .cia ROMs!");
             
             try {
                 Files.walkFileTree(modFolder, new DeleteDirectoryFileVisitor());
@@ -205,6 +208,13 @@ public class MainWindowController {
                 e.printStackTrace();
             }
         }));
+    }
+    
+    private boolean rebuildROM(Path working, Path output, List<Path> modFolder) {
+        if (output.toString().endsWith(".cia"))
+            return Randomizer.rebuildCIA(working, output, modFolder);
+        else
+            return Randomizer.rebuild3DS(working, output, modFolder);
     }
     
     private long parseSeed(String input) {
