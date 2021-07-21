@@ -15,10 +15,10 @@ import org.controlsfx.control.CheckTreeView;
 import com.amihaiemil.eoyaml.YamlMapping;
 import com.amihaiemil.eoyaml.YamlSequence;
 
-import net.digimonworld.decodetools.keepdata.Digimon;
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
-import net.digimonworld.decodetools.keepdata.enums.Level;
+import net.digimonworld.decodetools.data.keepdata.Digimon;
+import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.data.keepdata.enums.Level;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;

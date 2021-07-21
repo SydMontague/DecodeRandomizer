@@ -18,17 +18,17 @@ import java.util.stream.Collectors;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import net.digimonworld.decodetools.keepdata.Digimon;
-import net.digimonworld.decodetools.keepdata.DigimonRaising;
-import net.digimonworld.decodetools.keepdata.EvoRequirement;
-import net.digimonworld.decodetools.keepdata.EvoRequirement.Comperator;
-import net.digimonworld.decodetools.keepdata.EvoRequirement.Operator;
-import net.digimonworld.decodetools.keepdata.EvoRequirement.Requirement;
-import net.digimonworld.decodetools.keepdata.EvoRequirement.SuperGroup;
-import net.digimonworld.decodetools.keepdata.EvoRequirement.Type;
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
-import net.digimonworld.decodetools.keepdata.enums.Level;
+import net.digimonworld.decodetools.data.keepdata.Digimon;
+import net.digimonworld.decodetools.data.keepdata.DigimonRaising;
+import net.digimonworld.decodetools.data.keepdata.EvoRequirement;
+import net.digimonworld.decodetools.data.keepdata.EvoRequirement.Comperator;
+import net.digimonworld.decodetools.data.keepdata.EvoRequirement.Operator;
+import net.digimonworld.decodetools.data.keepdata.EvoRequirement.Requirement;
+import net.digimonworld.decodetools.data.keepdata.EvoRequirement.SuperGroup;
+import net.digimonworld.decodetools.data.keepdata.EvoRequirement.Type;
+import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.data.keepdata.enums.Level;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
@@ -119,7 +119,7 @@ public class EvolutionSettings implements Setting {
             case CHILD:
                 return () -> 30 + rand.nextInt(101);
             case ADULT:
-                return () -> 100 + rand.nextInt(101);
+                return () -> 120 + rand.nextInt(101);
             case PERFECT:
                 return () -> 250 + rand.nextInt(251);
             case ULTIMATE:

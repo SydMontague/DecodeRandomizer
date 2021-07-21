@@ -10,14 +10,6 @@ import java.util.Random;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import net.digimonworld.decodetools.keepdata.Digimon;
-import net.digimonworld.decodetools.keepdata.DigimonRaising;
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.Item;
-import net.digimonworld.decodetools.keepdata.Item.ItemType;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
-import net.digimonworld.decodetools.keepdata.enums.Attribute;
-import net.digimonworld.decodetools.keepdata.enums.Level;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
@@ -26,6 +18,14 @@ import javafx.scene.layout.VBox;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decodetools.data.keepdata.Digimon;
+import net.digimonworld.decodetools.data.keepdata.DigimonRaising;
+import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.data.keepdata.Item;
+import net.digimonworld.decodetools.data.keepdata.Item.ItemType;
+import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.data.keepdata.enums.Attribute;
+import net.digimonworld.decodetools.data.keepdata.enums.Level;
 
 public class DigimonSettings implements Setting {
     private static final Attribute[] ATTRIBUTE_LIST = new Attribute[] { Attribute.DATA, Attribute.VACCINE, Attribute.VIRUS };

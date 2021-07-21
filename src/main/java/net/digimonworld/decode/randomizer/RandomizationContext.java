@@ -9,13 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decodetools.core.Access;
 import net.digimonworld.decodetools.core.FileAccess;
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.data.digimon.PartnerDigimon;
+import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
 import net.digimonworld.decodetools.res.ResPayload;
 import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
-import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 
 public class RandomizationContext implements AutoCloseable {
     private final long initialSeed;
@@ -26,6 +27,7 @@ public class RandomizationContext implements AutoCloseable {
     private final GlobalKeepData globalKeepData;
     private final LanguageKeep languageKeep;
     private final Map<String, ResPayload> fileMap = new HashMap<>();
+    private final Map<Short, PartnerDigimon> partnerDigimon = new HashMap<>();
     
     private final RandoLogger logger;
     private final List<String> codeBinASM = new ArrayList<>();
@@ -48,6 +50,32 @@ public class RandomizationContext implements AutoCloseable {
         codeBinASM.add(".nds");
     }
     
+    public Optional<PartnerDigimon> getDigimon(short id) {
+        return getDigimon(id, false);
+    }
+    
+    public Optional<PartnerDigimon> getDigimon(short id, boolean readOnly) {
+        if(partnerDigimon.containsKey(id))
+            return Optional.of(partnerDigimon.get(id));
+        
+        String path = String.format("part0/arcv/Digimon/Partner/digi%d.res", id);
+        Path filePath = workingPath.resolve(path);
+
+        PartnerDigimon payload = null;
+        if (Files.isRegularFile(filePath)) {
+            try (Access access = new FileAccess(filePath.toFile())) {
+                payload = new PartnerDigimon((AbstractKCAP) ResPayload.craft(access));
+                if(!readOnly)
+                    partnerDigimon.put(id, payload);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+            
+        return Optional.ofNullable(payload);
+    }
+    
     public Optional<ResPayload> getFile(String path) {
         if (fileMap.containsKey(path))
             return Optional.of(fileMap.get(path));
@@ -66,11 +94,18 @@ public class RandomizationContext implements AutoCloseable {
         
         return Optional.ofNullable(payload);
     }
+
+    public void setFile(String path, ResPayload data) {
+        if(data != null)
+            fileMap.put(path, data);
+    }
+    
     
     public void build() throws IOException {
         globalKeepData.toKCAP().repack(modPath.resolve("part0/arcv/Keep/GlobalKeepData.res").toFile());
         
         fileMap.forEach((a, b) -> b.repack(modPath.resolve(a).toFile()));
+        partnerDigimon.forEach((a, b) -> b.toKCAP().repack(modPath.resolve(String.format("part0/arcv/Digimon/Partner/digi%s.res", a)).toFile()));
         
         codeBinASM.add(".close");
         Files.write(modPath.resolve("code.bin.asm"), codeBinASM);
@@ -104,5 +139,5 @@ public class RandomizationContext implements AutoCloseable {
     public boolean isRaceLogging() {
         return logger.isRaceLogging();
     }
-    
+
 }

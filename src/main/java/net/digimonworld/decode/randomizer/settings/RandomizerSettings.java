@@ -12,8 +12,8 @@ import com.amihaiemil.eoyaml.Yaml;
 import com.amihaiemil.eoyaml.YamlMapping;
 
 import net.digimonworld.decodetools.core.Tuple;
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Tab;
@@ -32,13 +32,13 @@ public class RandomizerSettings {
     
     public void randomize(RandomizationContext context) {
         logSettings(context);
-        
+
+        patchSettings.randomize(context);
         skillSettings.randomize(context);
         digimonSettings.randomize(context);
         evolutionSettings.randomize(context);
         starterSettings.randomize(context);
         worldSettings.randomize(context);
-        patchSettings.randomize(context);
         playerSettings.randomize(context);
     }
     

@@ -4,8 +4,8 @@ import java.util.Map;
 
 import com.amihaiemil.eoyaml.YamlMapping;
 
-import net.digimonworld.decodetools.keepdata.GlobalKeepData;
-import net.digimonworld.decodetools.keepdata.LanguageKeep;
+import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
+import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
 import javafx.scene.control.TitledPane;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 
