@@ -100,9 +100,9 @@ public class RandomizationContext implements AutoCloseable {
             fileMap.put(path, data);
     }
     
-    
     public void build() throws IOException {
         globalKeepData.toKCAP().repack(modPath.resolve("part0/arcv/Keep/GlobalKeepData.res").toFile());
+        languageKeep.toKCAP().repack(modPath.resolve("part0/arcv/Keep/LanguageKeep_jp.res").toFile());
         
         fileMap.forEach((a, b) -> b.repack(modPath.resolve(a).toFile()));
         partnerDigimon.forEach((a, b) -> b.toKCAP().repack(modPath.resolve(String.format("part0/arcv/Digimon/Partner/digi%s.res", a)).toFile()));

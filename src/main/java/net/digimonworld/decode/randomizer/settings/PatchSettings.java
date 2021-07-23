@@ -1,5 +1,6 @@
 package net.digimonworld.decode.randomizer.settings;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import javafx.scene.layout.VBox;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decodetools.PixelFormat;
 import net.digimonworld.decodetools.data.DigimonList;
 import net.digimonworld.decodetools.data.digimon.PartnerDigimon;
 import net.digimonworld.decodetools.data.keepdata.Digimon;
@@ -35,6 +37,11 @@ import net.digimonworld.decodetools.data.keepdata.EvoRequirement.Type;
 import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
 import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
 import net.digimonworld.decodetools.res.kcap.AbstractKCAP;
+import net.digimonworld.decodetools.res.kcap.GMIPKCAP;
+import net.digimonworld.decodetools.res.payload.GMIOPayload;
+import net.digimonworld.decodetools.res.payload.GMIOPayload.TextureFiltering;
+import net.digimonworld.decodetools.res.payload.GMIOPayload.TextureWrap;
+import net.digimonworld.decodetools.res.payload.GMIOPayload.UnknownEnum;
 import net.digimonworld.decodetools.res.payload.GenericPayload;
 
 public class PatchSettings implements Setting {
@@ -170,6 +177,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.KOROMON);
         setEvolveTo(keep, ownId, DigimonList.BLACK_WARGROWLMON, DigimonList.GREYMON, DigimonList.SEADRAMON, DigimonList.GROWLMON, DigimonList.WOODMON);
+        
+        setDescriptionString(context, ownId, "Focus on MP and low weight.\nEvolves from Koromon.");
     }
     
     private void addBlackGabumon(RandomizationContext context) {
@@ -203,6 +212,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.TSUNOMON);
         setEvolveTo(keep, ownId, DigimonList.BLACKGARURUMON, DigimonList.GARURUMON, DigimonList.GAOGAMON, DigimonList.VEEDRAMON, DigimonList.LEOMON);
+
+        setDescriptionString(context, ownId, "Focus on MP and high weight.\nEvolves from Tsunomon.");
     }
     
     private void addTsukaimon(RandomizationContext context) {
@@ -236,6 +247,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.TOKOMON);
         setEvolveTo(keep, ownId, DigimonList.DEVIMON, DigimonList.BLACKGATOMON, DigimonList.OGREMON, DigimonList.AIRDRAMON, DigimonList.KABUTERIMON);
+        
+        setDescriptionString(context, ownId, "Focus on Speed and high weight.\nEvolves from Tokomon.");
     }
     
     private void addPsychemon(RandomizationContext context) {
@@ -269,6 +282,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.WANYAMON);
         setEvolveTo(keep, ownId, DigimonList.GURURUMON, DigimonList.KYUBIMON, DigimonList.BAKEMON, DigimonList.TOGEMON, DigimonList.KUWAGAMON);
+        
+        setDescriptionString(context, ownId, "Focus on HP and high weight.\nEvolves from Wanyamon.\n\nDon't trust this false prophet.");
     }
     
     private void addSnowAgumon(RandomizationContext context) {
@@ -302,6 +317,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.GIGIMON);
         setEvolveTo(keep, ownId, DigimonList.ICEDEVIMON, DigimonList.IKKAKUMON, DigimonList.GURURUMON, DigimonList.EXVEEMON, DigimonList.CENTARUMON);
+
+        setDescriptionString(context, ownId, "Focus on Defense and low weight.\nEvolves from Gigimon.");
     }
     
     private void addSolarmon(RandomizationContext context) {
@@ -335,6 +352,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.MOTIMON);
         setEvolveTo(keep, ownId, DigimonList.GUARDROMON, DigimonList.GROWLMON_ORANGE, DigimonList.BIRDRAMON, DigimonList.VEGIEMON, DigimonList.GEREMON);
+
+        setDescriptionString(context, ownId, "Focus on Offense and high weight.\nEvolves from Motimon.");
     }
     
     private void addBlackGarurumon(RandomizationContext context) {
@@ -374,6 +393,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACKGABUMON, DigimonList.GABUMON, DigimonList.SALAMON, DigimonList.RENAMON);
         setEvolveTo(keep, ownId, DigimonList.BLACKWEREGARURUMON, DigimonList.BLUEMERAMON, DigimonList.WARUMONZAEMON);
+
+        setDescriptionString(context, ownId, "Requires HP, DEF and SPD.\nDon't get too heavy. Being happy helps.\nEvolves easier from BlackGabumon.");
     }
 
     private void addGururumon(RandomizationContext context) {
@@ -414,6 +435,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.PSYCHEMON, DigimonList.SNOWAGUMON, DigimonList.VEEMON, DigimonList.GAOMON);
         setEvolveTo(keep, ownId, DigimonList.WEREGARURUMON, DigimonList.ICELEOMON, DigimonList.TAOMON);
+
+        setDescriptionString(context, ownId, "Requires high Defense. Don't get too heavy.\nDoesn't respect authority.\nEvolves easier from Psychemon.");
     }
     
     private void addOrangeGrowlmon(RandomizationContext context) {
@@ -451,6 +474,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.SOLARMON, DigimonList.GOBURIMON, DigimonList.LALAMON, DigimonList.PATAMON);
         setEvolveTo(keep, ownId, DigimonList.WARGROWLMON_ORANGE, DigimonList.RIZEGREYMON, DigimonList.METALGREYMON);
+
+        setDescriptionString(context, ownId, "Requires DEF and SPD. Likes to fight.");
     }
     
     private void addBlackGrowlmon(RandomizationContext context) {
@@ -490,6 +515,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACKAGUMON, DigimonList.AGUMON, DigimonList.BETAMON, DigimonList.GUILMON);
         setEvolveTo(keep, ownId, DigimonList.BLACK_WARGROWLMON, DigimonList.METALGREYMON_VIRUS, DigimonList.MEGADRAMON);
+
+        setDescriptionString(context, ownId, "Requires HP, Offense and Defense.\nLikes to fight.\nEvolves easier from BlackAgumon.");
     }
     
     private void addIceDevimon(RandomizationContext context) {
@@ -529,6 +556,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.SNOWAGUMON, DigimonList.DEMIDEVIMON, DigimonList.GOMAMON, DigimonList.KAMEMON);
         setEvolveTo(keep, ownId, DigimonList.ZUDOMON, DigimonList.LADYDEVIMON, DigimonList.DIGITAMAMON);
+
+        setDescriptionString(context, ownId, "Requires MP, Speed and Brains.\nDon't get too heavy. Being disciplined helps.\nEvolves easier from SnowAgumon.");
     }
     
     private void addGeremon(RandomizationContext context) {
@@ -569,6 +598,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.SOLARMON, DigimonList.CHUUMON);
         setEvolveTo(keep, ownId, DigimonList.MONZAEMON, DigimonList.ETEMON);
+
+        setDescriptionString(context, ownId, "Requires high Defense. Don't get too heavy.\nYou probably want to avoid this one.\nEvolves easier from Psychemon.");
     }
     
     private void addMetalGreymonVirus(RandomizationContext context) {
@@ -610,8 +641,9 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACKGROWLMON, DigimonList.GREYMON);
         setEvolveTo(keep, ownId, DigimonList.BLACKWARGREYMON, DigimonList.MACHINEDRAMON);
+
+        setDescriptionString(context, ownId, "Requires high overall stats.\nDon't save on food.\nBeing disciplined helps.");
     }
-    
     
     private void addWarGrowlmonBlack(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Adding BlackWarGrowlmon...");
@@ -651,8 +683,9 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACKGROWLMON, DigimonList.GROWLMON);
         setEvolveTo(keep, ownId, DigimonList.CHAOSGALLANTMON, DigimonList.DARKDRAMON);
+
+        setDescriptionString(context, ownId, "Requires HP, Defense and Brains.\nKeep some food around. Likes to fight.\nEvolves easier from BlackGrowlmon.");
     }
-    
     
     private void addWarGrowlmonOrange(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Adding OrangeWarGrowlmon...");
@@ -692,6 +725,8 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.GROWLMON_ORANGE, DigimonList.TYRANNOMON);
         setEvolveTo(keep, ownId, DigimonList.RUSTTYRANNOMON, DigimonList.PRINCEMAMEMON);
+
+        setDescriptionString(context, ownId, "Requires HP, Defense and Brains.\nKeep some food around. Likes to fight.\nEvolves easier from OrangeGrowlmon.");
     }
     
     private void addBlackWereGarurumon(RandomizationContext context) {
@@ -723,7 +758,7 @@ public class PatchSettings implements Setting {
         requirements.add(new Requirement(SuperGroup.NORMAL, (byte) 4, Operator.AND, Comperator.LESS_THAN, Type.WEIGHT, 40));
         requirements.add(new Requirement(SuperGroup.NORMAL, (byte) 5, Operator.AND, Comperator.LESS_THAN, Type.CARE, 15));
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 6, Operator.AND, Comperator.GREATER_THAN, Type.HAPPINESS, 80));
-        requirements.add(new Requirement(SuperGroup.BONUS, (byte) 6, Operator.AND, Comperator.GREATER_THAN, Type.DISCIPLINE, 25));
+        requirements.add(new Requirement(SuperGroup.BONUS, (byte) 6, Operator.AND, Comperator.GREATER_THAN, Type.BATTLES, 25));
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 7, Operator.AND, Comperator.GREATER_THAN, Type.TECHS, 35));
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 8, Operator.AND, Comperator.GREATER_THAN, Type.DECODE_LEVEL, 14));
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 9, Operator.AND, Comperator.EQUALS, Type.DIGIMON, DigimonList.BLACKGARURUMON));
@@ -733,8 +768,9 @@ public class PatchSettings implements Setting {
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACKGARURUMON, DigimonList.GARURUMON, DigimonList.BLACKGATOMON);
         setEvolveTo(keep, ownId, DigimonList.BLACKMETALGARURUMON, DigimonList.PIEDMON);
+
+        setDescriptionString(context, ownId, "Strong, fast and nimble fighter.\nEvolves easier from BlackGarurumon.");
     }
-    
     
     private void addBlackWarGreymon(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Adding BlackWarGreymon...");
@@ -773,8 +809,9 @@ public class PatchSettings implements Setting {
         
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.METALGREYMON_VIRUS, DigimonList.METALGREYMON);
+        
+        setDescriptionString(context, ownId, "A perfect balance of offensive.\nand defense capabilities.\nRequires disciplined training and good food.\nEvolves from MetalGreymon.");
     }
-    
     
     private void addChaosDukemon(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Adding ChaosDukemon...");
@@ -809,14 +846,15 @@ public class PatchSettings implements Setting {
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 9, Operator.AND, Comperator.GREATER_THAN, Type.HAPPINESS, 80));
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 10, Operator.AND, Comperator.GREATER_THAN, Type.TECHS, 42));
         requirements.add(new Requirement(SuperGroup.BONUS, (byte) 11, Operator.AND, Comperator.GREATER_THAN, Type.DECODE_LEVEL, 17));
-        requirements.add(new Requirement(SuperGroup.BONUS, (byte) 12, Operator.AND, Comperator.EQUALS, Type.DIGIMON, DigimonList.BLACKWARGREYMON));
+        requirements.add(new Requirement(SuperGroup.BONUS, (byte) 12, Operator.AND, Comperator.EQUALS, Type.DIGIMON, DigimonList.BLACK_WARGROWLMON));
         
         keep.getEvoRequirements().get(ownId - 1).setRequirements(requirements);
         
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACK_WARGROWLMON, DigimonList.WARGROWLMON);
+
+        setDescriptionString(context, ownId, "Requires high overall stats. Likes good food.\nEvolves easier from BlackWarGrowlmon.");
     }
-    
     
     private void addBlackMetalGarurumon(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Adding BlackMetalGarurumon...");
@@ -857,7 +895,42 @@ public class PatchSettings implements Setting {
         
         // Evo Paths
         setEvolveFrom(keep, ownId, DigimonList.BLACKWEREGARURUMON, DigimonList.WEREGARURUMON);
+
+        setDescriptionString(context, ownId, "Very fast and defensive.\nKeep a disciplined diet, but don't get depressed.\nEvolves easier from BlackWereGarurumon.");
     }
+    
+    private void setDescriptionString(RandomizationContext context, short ownId, String string) {
+        context.getLanguageKeep().getDigimonDescription().getEntryById(ownId).ifPresent(a -> a.setString(string));
+    }
+    
+    @SuppressWarnings("unused")
+    private static void registerSprite(RandomizationContext context, short id, BufferedImage image) {
+        Optional<GMIPKCAP> images = context.getFile("part0/arcv/Keep/GlobalKeepRes.res").map(AbstractKCAP.class::cast).map(a -> (GMIPKCAP) a.get(8));
+        
+        if(images.isEmpty())
+            return;
+        
+        GMIOPayload gmio = new GMIOPayload(null);
+        gmio.setImage(image);
+        gmio.setFormat(PixelFormat.RGB5551);
+        gmio.setMinFilter(TextureFiltering.LINEAR);
+        gmio.setMagFilter(TextureFiltering.LINEAR);
+        gmio.setUnknown(UnknownEnum.NORMAL);
+        gmio.setUVHeightAbsolute(16);
+        gmio.setUVWidthAbsolute(68);
+        gmio.setWrapS(TextureWrap.CLAMP_TO_EDGE);
+        gmio.setWrapT(TextureWrap.CLAMP_TO_EDGE);
+        
+        images.get().add(gmio);
+        
+        for(int offset : SPRITE_TABLES) {
+            context.addASM(String.format(".org 0x%X", offset + id * 2));
+            context.addASM(String.format(".halfword %d", 0x145 + images.get().getEntryCount() - 1));
+        }
+    }
+    
+    private static final int[] SPRITE_TABLES = { 0x4A4330, 0x4A4E00, 0x4A527C, 0x4A6E00, 0x4A9AB0, 0x4AA564, 0x4AAFBC, 0x4AB678, 0x4ABD40, 0x4AC510, 0x4ACA90,
+            0x4AE12C, 0x4AE828, 0x4AF108, 0x4AFE08 };
     
     private static void applyBaseData(RandomizationContext context, short self, short base, short evoListPos) {
         Digimon baseData = context.getGlobalKeepData().getDigimonData().get(base - 1);
