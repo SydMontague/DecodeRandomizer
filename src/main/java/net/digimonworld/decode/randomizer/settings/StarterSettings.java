@@ -103,9 +103,13 @@ public class StarterSettings implements Setting {
         
         int starterRina = list.get(rand.nextInt(list.size()));
         int starterTaiga = list.get(rand.nextInt(list.size()));
+        int starterTaigaNGP = list.get(rand.nextInt(list.size()));
         
         context.addASM(".org 0x12CCC4");
         context.addASM(String.format(".byte 0x%02X", starterRina));
+        
+        context.addASM(".org 0x12D6A0");
+        context.addASM(String.format(".byte 0x%02X", starterTaigaNGP));
         
         context.addASM(".org 0x27AA18");
         context.addASM(String.format(".byte 0x%02X", starterTaiga));
@@ -114,6 +118,9 @@ public class StarterSettings implements Setting {
                         String.format("Randomized Rina's Starter to %s.", context.getLanguageKeep().getDigimonNames().getStringById(starterRina + 1)));
         context.logLine(LogLevel.CASUAL,
                         String.format("Randomized Taiga's Starter to %s.", context.getLanguageKeep().getDigimonNames().getStringById(starterTaiga + 1)));
+        context.logLine(LogLevel.CASUAL,
+                        String.format("Randomized Taiga's BG+ Starter to %s.", context.getLanguageKeep().getDigimonNames().getStringById(starterTaigaNGP + 1)));
+ 
     }
     
     @Override
