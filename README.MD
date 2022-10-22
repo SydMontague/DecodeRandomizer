@@ -8,7 +8,7 @@ This software allows randomizing several aspects of the 2013 released 3DS game "
 Before using this software make sure you
 
 * have Java 11 or higher installed
-  * you can download it from [AdoptOpenJDK](https://adoptopenjdk.net/)
+  * you can download it from [Adoptium](https://adoptium.net/)
 * have a dumped ROM of the game in .CCI/.3DS or .CIA format
   * the ROM can have the English translation patch applied
   * other modifications can generally be compatible as well, but success may vary
