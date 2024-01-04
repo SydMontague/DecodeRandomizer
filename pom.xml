@@ -18,6 +18,9 @@
       <id>github</id>
       <name>GitHub DecodeTools Packages</name>
       <url>https://maven.pkg.github.com/SydMontague/DecodeTools</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
