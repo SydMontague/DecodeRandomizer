@@ -101,9 +101,9 @@ public class PatchSettings implements Setting {
                     JavaFXUtils.buildToggleSwitch("Enable additional Digimon",
                                                   Optional.of("Makes 19 previously unobtainable recolor Digimon available.\nBlackAgumon, BlackGabumon, Tsukaimon, Psychemon,\nSnowAgumon, Solarmon, BlackGarurumon, Gururumon,\nYellowGrowlmon, BlackGrowlmon, IceDevimon,\nGeremon, MetalGreymon (Virus), BlackWarGrowlmon,\nOrangeWarGrowlmon, BlackWereGarurumon, BlackWarGreymon,\nBlackMetalGarurumon, ChaosDukemon"),
                                                   Optional.of(patchAddRecolorDigimon)),
-        			JavaFXUtils.buildToggleSwitch("Sort Evolution List",
-								                  Optional.of("Sort Digimon Evolution List alphabetically"),
-								    	          Optional.of(patchEvoListOrder)));
+                    JavaFXUtils.buildToggleSwitch("Sort Evolution List",
+                                                  Optional.of("Sort Digimon Evolution List alphabetically"),
+                                                  Optional.of(patchEvoListOrder)));
         return pane;
     }
     
@@ -122,21 +122,19 @@ public class PatchSettings implements Setting {
         if (patchAddRecolorDigimon.get())
             patchAddRecolorDigimon(context);
         if (patchEvoListOrder.get())
-			patchEvoListOrder(context);
+            patchEvoListOrder(context);
     }
 
     private void patchEvoListOrder(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Patching Evolution List Order...");
-		List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
-		var names = context.getLanguageKeep().getDigimonNames();
-		list.sort(Comparator.comparing(Digimon::getLevel).thenComparing(a -> names.getStringById(a.getId())));
+        List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
+        var names = context.getLanguageKeep().getDigimonNames();
+        list.sort(Comparator.comparing(Digimon::getLevel).thenComparing(a -> names.getStringById(a.getId())));
 
-		short evoListPos = 1;
-
-		for (Digimon digimon : list)
-		digimon.setEvoListPos(evoListPos++);
-	    
-	}
+        short evoListPos = 1;
+        for (Digimon digimon : list)
+        digimon.setEvoListPos(evoListPos++);
+    }
     
     private void patchAddRecolorDigimon(RandomizationContext context) {
         context.logLine(LogLevel.ALWAYS, "Adding new Digimon...");
