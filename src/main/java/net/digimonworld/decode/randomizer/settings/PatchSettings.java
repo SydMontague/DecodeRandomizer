@@ -133,7 +133,7 @@ public class PatchSettings implements Setting {
 
         short evoListPos = 1;
         for (Digimon digimon : list)
-        digimon.setEvoListPos(evoListPos++);
+            digimon.setEvoListPos(evoListPos++);
     }
     
     private void patchAddRecolorDigimon(RandomizationContext context) {
@@ -1066,7 +1066,8 @@ public class PatchSettings implements Setting {
         map.put("patchDisable90FBattles", patchDisable90FBattles.get());
         map.put("patchMovementSpeed", patchMovementSpeed.get());
         map.put("patchAddRecolorDigimon", patchAddRecolorDigimon.get());
-        map.put("patchEvoListOrder", patchEvoListOrder.get());	
+        map.put("patchEvoListOrder", patchEvoListOrder.get());
+
         return map;
     }
     
