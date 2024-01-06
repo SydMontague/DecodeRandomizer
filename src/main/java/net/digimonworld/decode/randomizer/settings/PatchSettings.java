@@ -127,17 +127,16 @@ public class PatchSettings implements Setting {
     }
 
     private void patchListOrder(RandomizationContext context) {
-	context.logLine(LogLevel.ALWAYS, "Patching List Order...");
+        context.logLine(LogLevel.ALWAYS, "Patching List Order...");
+        List<AccessoryOrder> accorder = new ArrayList<>(context.getGlobalKeepData().getAccessoryOrder());
+        var accNames = context.getLanguageKeep().getAccessoryNames();
+        accorder.sort(Comparator.comparing(order -> accNames.getStringById(order.getId())));
+        
+        int accOrder = 1;
+        for (AccessoryOrder acccorderdata : accorder)
+                acccorderdata.setAccId(accOrder++);
 	    
-	List<AccessoryOrder> accorder = new ArrayList<>(context.getGlobalKeepData().getAccessoryOrder());
-	var accNames = context.getLanguageKeep().getAccessoryNames();
-	accorder.sort(Comparator.comparing(order -> accNames.getStringById(order.getId())));
-
-	int accOrder = 1;
-	for (AccessoryOrder acccorderdata : accorder)
-		acccorderdata.setAccId(accOrder++);
-	    
-        List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
+	List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
         var names = context.getLanguageKeep().getDigimonNames();
         list.sort(Comparator.comparing(Digimon::getLevel).thenComparing(a -> names.getStringById(a.getId())));
 
