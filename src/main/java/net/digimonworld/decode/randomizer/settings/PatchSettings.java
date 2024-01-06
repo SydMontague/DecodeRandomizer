@@ -25,6 +25,7 @@ import javafx.scene.layout.VBox;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decodetools.data.keepdata.AccessoryOrder;
 import net.digimonworld.decodetools.PixelFormat;
 import net.digimonworld.decodetools.data.DigimonList;
 import net.digimonworld.decodetools.data.digimon.PartnerDigimon;
@@ -102,9 +103,9 @@ public class PatchSettings implements Setting {
                     JavaFXUtils.buildToggleSwitch("Enable additional Digimon",
                                                   Optional.of("Makes 19 previously unobtainable recolor Digimon available.\nBlackAgumon, BlackGabumon, Tsukaimon, Psychemon,\nSnowAgumon, Solarmon, BlackGarurumon, Gururumon,\nYellowGrowlmon, BlackGrowlmon, IceDevimon,\nGeremon, MetalGreymon (Virus), BlackWarGrowlmon,\nOrangeWarGrowlmon, BlackWereGarurumon, BlackWarGreymon,\nBlackMetalGarurumon, ChaosDukemon"),
                                                   Optional.of(patchAddRecolorDigimon)),
-                    JavaFXUtils.buildToggleSwitch("Sort Evolution List",
-                                                  Optional.of("Sort Digimon Evolution List alphabetically"),
-                                                  Optional.of(patchListOrder)));
+                    JavaFXUtils.buildToggleSwitch("Sort Lists Alphabetically",
+                                                  Optional.of("Sort Digimon Evolution List & Accessories alphabetically"),
+                                                  Optional.of(patchListOrder))); 
         return pane;
     }
     
@@ -126,23 +127,31 @@ public class PatchSettings implements Setting {
             patchListOrder(context);
     }
 
-    private void patchListOrder(RandomizationContext context) {
-        context.logLine(LogLevel.ALWAYS, "Patching List Order...");
+    private void sortAccessoryOrder(RandomizationContext context) {
         List<AccessoryOrder> accorder = new ArrayList<>(context.getGlobalKeepData().getAccessoryOrder());
         var accNames = context.getLanguageKeep().getAccessoryNames();
         accorder.sort(Comparator.comparing(order -> accNames.getStringById(order.getId())));
-        
+
         int accOrder = 1;
         for (AccessoryOrder acccorderdata : accorder)
-                acccorderdata.setAccId(accOrder++);
-	    
-	List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
+            acccorderdata.setAccId(accOrder++);
+    }
+
+    private void sortDigimonOrder(RandomizationContext context) {
+        List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
         var names = context.getLanguageKeep().getDigimonNames();
         list.sort(Comparator.comparing(Digimon::getLevel).thenComparing(a -> names.getStringById(a.getId())));
 
         short evoListPos = 1;
         for (Digimon digimon : list)
             digimon.setEvoListPos(evoListPos++);
+    }
+
+    private void patchListOrder(RandomizationContext context) {
+        context.logLine(LogLevel.ALWAYS, "Patching List Order...");
+
+        sortAccessoryOrder(context);
+        sortDigimonOrder(context);
     }
     
     private void patchAddRecolorDigimon(RandomizationContext context) {
