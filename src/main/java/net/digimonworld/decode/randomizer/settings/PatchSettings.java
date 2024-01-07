@@ -25,6 +25,7 @@ import javafx.scene.layout.VBox;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decodetools.data.keepdata.AccessoryOrder;
 import net.digimonworld.decodetools.PixelFormat;
 import net.digimonworld.decodetools.data.DigimonList;
 import net.digimonworld.decodetools.data.digimon.PartnerDigimon;
@@ -59,7 +60,7 @@ public class PatchSettings implements Setting {
     private BooleanProperty patchDisable90FBattles = new SimpleBooleanProperty();
     private BooleanProperty patchMovementSpeed = new SimpleBooleanProperty();
     private BooleanProperty patchAddRecolorDigimon = new SimpleBooleanProperty();
-    private BooleanProperty patchEvoListOrder = new SimpleBooleanProperty();
+    private BooleanProperty patchListOrder = new SimpleBooleanProperty();
     
     @Override
     public TitledPane create(GlobalKeepData inputData, LanguageKeep languageKeep) {
@@ -102,9 +103,9 @@ public class PatchSettings implements Setting {
                     JavaFXUtils.buildToggleSwitch("Enable additional Digimon",
                                                   Optional.of("Makes 19 previously unobtainable recolor Digimon available.\nBlackAgumon, BlackGabumon, Tsukaimon, Psychemon,\nSnowAgumon, Solarmon, BlackGarurumon, Gururumon,\nYellowGrowlmon, BlackGrowlmon, IceDevimon,\nGeremon, MetalGreymon (Virus), BlackWarGrowlmon,\nOrangeWarGrowlmon, BlackWereGarurumon, BlackWarGreymon,\nBlackMetalGarurumon, ChaosDukemon"),
                                                   Optional.of(patchAddRecolorDigimon)),
-                    JavaFXUtils.buildToggleSwitch("Sort Evolution List",
-                                                  Optional.of("Sort Digimon Evolution List alphabetically"),
-                                                  Optional.of(patchEvoListOrder)));
+                    JavaFXUtils.buildToggleSwitch("Sort Lists Alphabetically",
+                                                  Optional.of("Sort Digimon Evolution List & Accessories alphabetically"),
+                                                  Optional.of(patchListOrder))); 
         return pane;
     }
     
@@ -122,12 +123,21 @@ public class PatchSettings implements Setting {
             patchMovementSpeed(context);
         if (patchAddRecolorDigimon.get())
             patchAddRecolorDigimon(context);
-        if (patchEvoListOrder.get())
-            patchEvoListOrder(context);
+        if (patchListOrder.get())
+            patchListOrder(context);
     }
 
-    private void patchEvoListOrder(RandomizationContext context) {
-        context.logLine(LogLevel.ALWAYS, "Patching Evolution List Order...");
+    private void sortAccessoryOrder(RandomizationContext context) {
+        List<AccessoryOrder> accorder = new ArrayList<>(context.getGlobalKeepData().getAccessoryOrder());
+        var accNames = context.getLanguageKeep().getAccessoryNames();
+        accorder.sort(Comparator.comparing(order -> accNames.getStringById(order.getId())));
+
+        int accOrder = 1;
+        for (AccessoryOrder acccorderdata : accorder)
+            acccorderdata.setAccId(accOrder++);
+    }
+
+    private void sortDigimonOrder(RandomizationContext context) {
         List<Digimon> list = new ArrayList<>(context.getGlobalKeepData().getDigimonData());
         var names = context.getLanguageKeep().getDigimonNames();
         list.sort(Comparator.comparing(Digimon::getLevel).thenComparing(a -> names.getStringById(a.getId())));
@@ -135,6 +145,13 @@ public class PatchSettings implements Setting {
         short evoListPos = 1;
         for (Digimon digimon : list)
             digimon.setEvoListPos(evoListPos++);
+    }
+
+    private void patchListOrder(RandomizationContext context) {
+        context.logLine(LogLevel.ALWAYS, "Patching List Order...");
+
+        sortAccessoryOrder(context);
+        sortDigimonOrder(context);
     }
     
     private void patchAddRecolorDigimon(RandomizationContext context) {
@@ -1067,7 +1084,7 @@ public class PatchSettings implements Setting {
         map.put("patchDisable90FBattles", patchDisable90FBattles.get());
         map.put("patchMovementSpeed", patchMovementSpeed.get());
         map.put("patchAddRecolorDigimon", patchAddRecolorDigimon.get());
-        map.put("patchEvoListOrder", patchEvoListOrder.get());
+        map.put("patchListOrder", patchListOrder.get());
 
         return map;
     }
@@ -1084,7 +1101,7 @@ public class PatchSettings implements Setting {
         this.patchDisable90FBattles.set(Boolean.parseBoolean(map.string("patchDisable90FBattles")));
         this.patchMovementSpeed.set(Boolean.parseBoolean(map.string("patchMovementSpeed")));
         this.patchAddRecolorDigimon.set(Boolean.parseBoolean(map.string("patchAddRecolorDigimon")));        
-        this.patchEvoListOrder.set(Boolean.parseBoolean(map.string("patchEvoListOrder")));
+        this.patchListOrder.set(Boolean.parseBoolean(map.string("patchListOrder")));
     }
     
 }
