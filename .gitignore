@@ -14,3 +14,4 @@
 # Testing stuff
 config.yml
 *.cci
+/.vscode
