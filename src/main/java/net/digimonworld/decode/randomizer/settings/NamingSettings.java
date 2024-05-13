@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
+import java.nio.file.Files;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
 import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
 import net.digimonworld.decodetools.data.keepdata.enums.Level;
 import net.digimonworld.decodetools.res.payload.BTXPayload;
+import net.digimonworld.decodetools.core.DeleteDirectoryFileVisitor;
 import net.digimonworld.decodetools.res.payload.BTXPayload.BTXEntry;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,12 +39,16 @@ import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.Scene;
+import javafx.stage.FileChooser;
 import net.digimonworld.decode.randomizer.RandoLogger.LogLevel;
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
+import net.digimonworld.decode.randomizer.MainWindowController;
 
 public class NamingSettings implements Setting {
 
+    private List<String> skippable = List.of("", "None", "Unused Item", "???", "NO DATA");
     private BooleanProperty enabled = new SimpleBooleanProperty();
     private Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
 
@@ -55,7 +61,6 @@ public class NamingSettings implements Setting {
         TitledPane pane = new TitledPane("Namings", vbox);
         vbox.setAlignment(Pos.TOP_LEFT);
         pane.setCollapsible(false);
-        pane.setPrefHeight(400);
         EventHandler<ActionEvent> handler = new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
 
@@ -67,8 +72,17 @@ public class NamingSettings implements Setting {
                     if (methodName.contains("Names"))
                         methodList.add(methodName);
                 }
-
                 System.out.println(methodList);
+
+                try {
+                    File csvDir = new File("./renamingPresets/");
+                    Files.walkFileTree(csvDir.toPath(), new DeleteDirectoryFileVisitor());
+                    csvDir.mkdir();
+
+                } catch (IOException exc) {
+                    exc.printStackTrace();
+                    return;
+                }
 
                 methodList.forEach(s -> {
                     ArrayList<String> myList = new ArrayList<String>();
@@ -81,10 +95,13 @@ public class NamingSettings implements Setting {
 
                     }
 
-                    File destFile = new File("./" + s.substring(3) + ".csv");
+                    File destFile = new File("./renamingPresets/" + s.substring(3) + ".csv");
                     try (BufferedWriter writer = new BufferedWriter(new FileWriter(destFile, StandardCharsets.UTF_8))) {
+
                         writer.write("original;replace\n");
-                        String string = myList.stream().collect(Collectors.joining(";\n")) + ";";
+                        String string = myList.stream().filter(str -> !skippable.contains(str))
+                                .map(str -> str + ";" + str).collect(Collectors.joining(";\n"))
+                                + ";";
 
                         writer.write(string);
                     } catch (IOException e) {
