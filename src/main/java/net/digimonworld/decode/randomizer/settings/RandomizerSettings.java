@@ -84,7 +84,7 @@ public class RandomizerSettings {
                 Tuple.of("General",
                         Arrays.asList(digimonSettings, evolutionSettings, skillSettings, worldSettings, patchSettings)),
                 Tuple.of("New Game", Arrays.asList(starterSettings, playerSettings)),
-                Tuple.of("Translation", Arrays.asList(namingSettings)));
+                Tuple.of("Patch Names", Arrays.asList(namingSettings)));
     }
 
     public Map<String, Object> serialize() {
