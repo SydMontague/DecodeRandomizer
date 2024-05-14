@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.nio.file.StandardCopyOption;
@@ -36,6 +37,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.When;
 import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
@@ -50,11 +52,12 @@ public class NamingSettings implements Setting {
     private List<String> skippable = List.of("", "None", "Unused Item", "???", "NO DATA", "n");
     private BooleanProperty renameEnabled = new SimpleBooleanProperty();
     private BooleanProperty randomizeEnabled = new SimpleBooleanProperty();
-    private BooleanProperty camelCase = new SimpleBooleanProperty();
+    private BooleanProperty camelCase = new SimpleBooleanProperty(true);
     private BooleanProperty manualCsv = new SimpleBooleanProperty();
     private BooleanProperty replaceAll = new SimpleBooleanProperty();
-    private BooleanProperty pickle = new SimpleBooleanProperty();
-    private BooleanProperty orge = new SimpleBooleanProperty();
+    private BooleanProperty pickle = new SimpleBooleanProperty(false);
+    private BooleanProperty ogre = new SimpleBooleanProperty(false);
+    private BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
     private Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
 
     private Accordion mainAc;
@@ -94,10 +97,34 @@ public class NamingSettings implements Setting {
         }
 
         public Replacement(String index, String original, String replacement, String rawExcludedTerms,
-                String rawDisabledPaths) {
+                String rawDisabledPaths, String origin) {
             this.index = Integer.parseInt(index);
             this.original = original;
-            this.replacement = replacement;
+
+            List<String> digiNamePaths = List.of(11, 27, 28).stream()
+                    .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).toList();
+
+            boolean digiName = digiNamePaths.contains(origin);
+
+            if (!manualCsv.get()) {
+                if (ogre.get() && replacement.equals("Orgemon")) {
+                    this.replacement = "Ogremon";
+                }
+                if (pickle.get() && replacement.equals("Piccolomon")) {
+                    this.replacement = "Picklemon";
+                } else if (blackPrefix.get() && replacement.endsWith("mon (Black)")) {
+                    this.replacement = "Black" + replacement.substring(0, replacement.length() - 8);
+                } else {
+                    this.replacement = replacement;
+                }
+            } else {
+                this.replacement = replacement;
+            }
+
+            if (digiName && !camelCase.get()) {
+                this.replacement = this.replacement.replaceAll("([a-z])([A-Z])", "$1 $2");
+            }
+
             this.matchLength = original.length();
             this.excludedTerms = List.of(rawExcludedTerms.split(","));
             String[] pathos = rawDisabledPaths.split(",");
@@ -274,19 +301,29 @@ public class NamingSettings implements Setting {
         TitledPane randoPane = new TitledPane("Randomize names", randoBox);
         randoPane.setId("random");
 
-        camelCase.set(true);
         pane.setCollapsible(false);
         File csvDir = new File("./renamingPresets/");
         manualCsv.set(csvDir.exists() && csvDir.isDirectory() && csvDir.listFiles().length != 0);
 
         ToggleSwitch camel = JavaFXUtils.buildToggleSwitch("camelCase names", Optional.empty(), Optional.of(camelCase));
         ToggleSwitch manCs = JavaFXUtils.buildToggleSwitch("use Manual CSV", Optional.empty(), Optional.of(manualCsv));
+        ToggleSwitch orgeCheck = JavaFXUtils.buildToggleSwitch("'Ogremon' spelling", Optional.empty(),
+                Optional.of(ogre));
+        ToggleSwitch pickleCheck = JavaFXUtils.buildToggleSwitch("'Picklemon' spelling", Optional.empty(),
+                Optional.of(pickle));
+        ToggleSwitch blackCheck = JavaFXUtils.buildToggleSwitch("Always use 'Black' as prefix", Optional.empty(),
+                Optional.of(blackPrefix));
         ToggleSwitch repAll = JavaFXUtils.buildToggleSwitch("Replace terms in ALL text", Optional.empty(),
                 Optional.of(replaceAll));
 
+        BooleanBinding manLink = new When(renameEnabled).then(manualCsv).otherwise(renameEnabled.not());
+
         manCs.disableProperty().bind(renameEnabled.not());
         repAll.disableProperty().bind(renameEnabled.not());
-        camel.disableProperty().bind(new When(renameEnabled).then(manualCsv).otherwise(renameEnabled.not()));
+        orgeCheck.disableProperty().bind(manLink);
+        blackCheck.disableProperty().bind(manLink);
+        pickleCheck.disableProperty().bind(manLink);
+        camel.disableProperty().bind(manLink);
 
         EventHandler<ActionEvent> rawExportHandler = new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
@@ -325,21 +362,21 @@ public class NamingSettings implements Setting {
             }
         };
 
-        Button camelExp = new Button("Export CSVs for CamelCase names");
-        Button spaceExp = new Button("Export CSVs for spaced names");
+        Button camelExp = new Button("Export CSVs for restoration preset");
         Button curExp = new Button("Export CSVs for current names");
         curExp.setOnAction(rawExportHandler);
-        camelExp.setOnAction(buildHandler("renamingPresets/camelCase/", csvDir));
-        spaceExp.setOnAction(buildHandler("renamingPresets/space/", csvDir));
+        camelExp.setOnAction(buildHandler("renamingPresets/", csvDir));
 
         restoreBox.getChildren().addAll(
                 JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(renameEnabled)),
                 manCs,
                 camel,
                 repAll,
+                blackCheck,
+                orgeCheck,
+                pickleCheck,
                 curExp,
-                camelExp,
-                spaceExp);
+                camelExp);
         randoBox.getChildren().addAll(
                 JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(randomizeEnabled)));
 
@@ -370,7 +407,7 @@ public class NamingSettings implements Setting {
             this.keepMap.put("CardSetNames", "30");
         }
 
-        public BTXPayload resolve(String path) {
+        public Tuple<String, BTXPayload> resolve(String path) {
             ArrayList<String> frag = new ArrayList<>(
                     List.of((keepMap.containsKey(path) ? ("keep-" + keepMap.get(path)) : path).split("-")));
             int btxIndex = Integer.parseInt(frag.remove(frag.size() - 1));
@@ -380,11 +417,11 @@ public class NamingSettings implements Setting {
             NormalKCAP pk = (NormalKCAP) context.getFile(finalPath).get();
             if (frag.get(frag.size() - 1).equals("keep"))
                 pk = (NormalKCAP) pk.get(0);
-            return (BTXPayload) pk.get(btxIndex);
+            return new Tuple<String, BTXPayload>(finalPath + "/" + btxIndex, (BTXPayload) pk.get(btxIndex));
         }
     }
 
-    private void targetedBtxReplacement(BTXPayload btx, File f) {
+    private void targetedBtxReplacement(BTXPayload btx, File f, String path) {
         System.out.println(f.getName());
         try {
             List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
@@ -395,7 +432,7 @@ public class NamingSettings implements Setting {
                 String[] entries = lines.get(i).split(";", -1);
                 if (entries[1].equals(entries[2]))
                     continue;
-                Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4]);
+                Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
                 rep.replaceExact(btx);
                 if (replaceAll.get() && rep.global)
                     reps.add(rep);
@@ -418,14 +455,14 @@ public class NamingSettings implements Setting {
             if (manualCsv.get() && manualCsvDir.exists()) {
                 origin = manualCsvDir;
             } else {
-                String resourcePath = "renamingPresets/" + (camelCase.get() ? "camelCase" : "space") + "/";
+                String resourcePath = "renamingPresets/";
                 origin = new File(DecodeRandomizer.class.getResource(resourcePath).getFile());
             }
             List<File> presets = List.of(origin.listFiles());
             presets.stream().filter(f -> f.getName().contains("-")).forEach(p -> {
                 String pName = p.getName();
-                BTXPayload foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
-                targetedBtxReplacement(foundBtx, p);
+                Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
+                targetedBtxReplacement(foundBtx.getValue(), p, foundBtx.getKey());
             });
 
             if (!replaceAll.get())
