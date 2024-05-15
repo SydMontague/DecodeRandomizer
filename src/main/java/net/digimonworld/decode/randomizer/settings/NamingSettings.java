@@ -537,20 +537,27 @@ public class NamingSettings implements Setting {
             }
 
         } else {
-
+            Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
             randoTypes.stream().filter(k -> randoMap.get(k).get()).map(s -> s.replaceAll(" ", "")).forEach(name -> {
                 try {
-                    BTXPayload btx = res.resolve(name).getValue();
-                    Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
+                    //creating a list of all btx entries in the payload without empty/filler fields
+                    ArrayList<BTXEntry> entries = new ArrayList<>(res.resolve(name).getValue().getEntries().stream().map(e -> e.getValue()).filter(v -> !skippable.contains(v.getString())).collect(Collectors.toList()));
 
-                    ArrayList<BTXEntry> ents = new ArrayList<>(btx.getEntries().stream().map(e -> e.getValue()).collect(Collectors.toList()));
-
-                    while (ents.size() > 1) {
-                        int i = rand.nextInt(ents.size());
-                        BTXEntry btxA = ents.remove(i);
-                        int n = rand.nextInt(ents.size());
-                        BTXEntry btxB = ents.remove(n);
+                    BTXEntry firstEntry = null;
+                    //Switching the value of a random pair of BTX entries and removing them from the list.
+                    while (entries.size() > 1) {
+                        int i = rand.nextInt(entries.size());
+                        BTXEntry btxA = entries.remove(i);
+                        if (firstEntry == null) {
+                            firstEntry = btxA;
+                        }
+                        int n = rand.nextInt(entries.size());
+                        BTXEntry btxB = entries.remove(n);
                         btxSwitch(btxA, btxB);
+                    }
+                    //In case there's an uneven number of entries we switch the leftover entry with the first entry we processed previously
+                    if (entries.size() == 1) {
+                        btxSwitch(firstEntry, entries.get(0));
                     }
                 } catch (ParseException e) {
                 }
