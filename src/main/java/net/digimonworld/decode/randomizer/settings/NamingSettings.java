@@ -568,8 +568,15 @@ public class NamingSettings implements Setting {
     @Override
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
-        map.put("enabled", renameEnabled.get());
-        map.put("checked", propertyMap.entrySet().stream().filter(a -> a.getValue().get()).map(Map.Entry::getKey)
+        map.put("renameEnabled", renameEnabled.get());
+        map.put("randomizeEnabled", randomizeEnabled.get());
+        map.put("camelCase", camelCase.get());
+        map.put("manualCsv", manualCsv.get());
+        map.put("replaceAll", replaceAll.get());
+        map.put("pickle", pickle.get());
+        map.put("ogre", ogre.get());
+        map.put("blackPrefix", blackPrefix.get());
+        map.put("randomChecked", randoMap.entrySet().stream().filter(a -> a.getValue().get()).map(Map.Entry::getKey)
                 .collect(Collectors.toList()));
         return map;
     }

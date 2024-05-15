@@ -96,6 +96,7 @@ public class RandomizerSettings {
         map.put("worldSettings", worldSettings.serialize());
         map.put("patchSettings", patchSettings.serialize());
         map.put("playerSettings", playerSettings.serialize());
+        map.put("namingSettings", namingSettings.serialize());
 
         return map;
     }
