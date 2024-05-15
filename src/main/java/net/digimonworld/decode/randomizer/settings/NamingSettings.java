@@ -18,7 +18,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
-import java.util.regex.PatternSyntaxException;
 
 import org.controlsfx.control.ToggleSwitch;
 
@@ -60,7 +59,9 @@ public class NamingSettings implements Setting {
     private final BooleanProperty pickle = new SimpleBooleanProperty(false);
     private final BooleanProperty ogre = new SimpleBooleanProperty(false);
     private final BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
-    private Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
+    private final Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
+    private final Map<String, BooleanProperty> randoMap = new HashMap<>();
+    private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
 
     private Accordion mainAc;
     /**
@@ -423,6 +424,13 @@ public class NamingSettings implements Setting {
         randoBox.getChildren().addAll(
                 JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(randomizeEnabled)));
 
+        for (String r : randoTypes) {
+            randoMap.put(r, new SimpleBooleanProperty(false));
+            ToggleSwitch swit = JavaFXUtils.buildToggleSwitch(r, Optional.empty(), Optional.of(randoMap.get(r)));
+            swit.disableProperty().bind(randomizeEnabled.not());
+            randoBox.getChildren().add(swit);
+        }
+
         mainAc.getPanes().addAll(restorePane, randoPane);
         return pane;
     }
@@ -530,26 +538,24 @@ public class NamingSettings implements Setting {
 
         } else {
 
-            try {
-                BTXPayload btx = res.resolve("keep-11").getValue();
+            randoTypes.stream().filter(k -> randoMap.get(k).get()).map(s -> s.replaceAll(" ", "")).forEach(name -> {
+                try {
+                    BTXPayload btx = res.resolve(name).getValue();
+                    Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
 
-                Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
+                    ArrayList<BTXEntry> ents = new ArrayList<>(btx.getEntries().stream().map(e -> e.getValue()).collect(Collectors.toList()));
 
-                ArrayList<BTXEntry> ents = new ArrayList<>(btx.getEntries().stream().map(e -> e.getValue()).collect(Collectors.toList()));
-
-                while (ents.size() > 1) {
-                    int i = rand.nextInt(ents.size());
-                    BTXEntry btxA = ents.remove(i);
-                    int n = rand.nextInt(ents.size());
-                    BTXEntry btxB = ents.remove(n);
-                    System.out.println(i + " " + n);
-                    btxSwitch(btxA, btxB);
+                    while (ents.size() > 1) {
+                        int i = rand.nextInt(ents.size());
+                        BTXEntry btxA = ents.remove(i);
+                        int n = rand.nextInt(ents.size());
+                        BTXEntry btxB = ents.remove(n);
+                        btxSwitch(btxA, btxB);
+                    }
+                } catch (ParseException e) {
                 }
-            } catch (ParseException e) {
-            }
-
+            });
         }
-
     }
 
     @Override
