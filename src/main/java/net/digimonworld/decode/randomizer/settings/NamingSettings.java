@@ -65,8 +65,22 @@ public class NamingSettings implements Setting {
     private Accordion mainAc;
     /**
      * Visualization of a replacement map:
-     * <p>
+     *
      * { "part0/arcv/Keep/LanguageKeep_jp.res/11:12": [ [0,4,2], [8,13,-1] ] }
+     *
+     * Path schema works like this:
+     *
+     * [string path to the actual file]/[index of BTX file]:[BTX line]
+     *
+     * Replacement info pattern:
+     *
+     * [match start, match end, offset of result]
+     *
+     * Replacements are saved to prevent replacing terms that have already been
+     * processed by a prior replacement. The offsets are used to map a position
+     * of a match to its position in the unmodified line, making it possible to
+     * exclude replacing matches at specific indices in a line based on the
+     * original file.
      */
     // The tuple inside the ArrayList works like this: [0]
     public Map<String, ArrayList<int[]>> replacementMap = new HashMap<>();
