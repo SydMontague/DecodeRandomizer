@@ -98,7 +98,7 @@ public class NamingSettings implements Setting {
         if (!digiNamePaths.contains(path)) {
             return TermType.GENERAL;
         }
-        return term.matches("[a-z][A-Z]") ? TermType.DIGIMONMULTI : TermType.DIGIMON;
+        return term.matches(".*[a-z][A-Z].*") ? TermType.DIGIMONMULTI : TermType.DIGIMON;
     }
 
     private static void btxSwitch(BTXEntry btxA, BTXEntry btxB) {
@@ -184,6 +184,7 @@ public class NamingSettings implements Setting {
             BTXEntry entry = btx.getEntryById(index).get();
             if (!original.equals(replacement)) {
                 entry.setString(replacement);
+                System.out.println(original + " -> " + replacement);
             }
             // Exact replacements block any future replacements on this particular line.
             insertRepData(path, -1, Integer.MAX_VALUE, 0);
