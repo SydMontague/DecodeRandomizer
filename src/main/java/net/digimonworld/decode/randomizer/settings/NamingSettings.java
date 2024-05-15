@@ -85,6 +85,28 @@ public class NamingSettings implements Setting {
     // The tuple inside the ArrayList works like this: [0]
     public Map<String, ArrayList<int[]>> replacementMap = new HashMap<>();
 
+    protected enum TermType {
+        GENERAL,
+        DIGIMON,
+        DIGIMONMULTI
+    }
+
+    private static TermType classifyTerm(String term, String path) {
+        List<String> digiNamePaths = List.of(11, 27, 28).stream()
+                .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).collect(Collectors.toList());
+        if (!digiNamePaths.contains(path)) {
+            return TermType.GENERAL;
+        }
+        return term.matches("[a-z][A-Z]") ? TermType.DIGIMONMULTI : TermType.DIGIMON;
+    }
+
+    private void btxSwitch(BTXEntry btxA, BTXEntry btxB) {
+        String a = btxA.getString();
+        String b = btxB.getString();
+        btxA.setString(b);
+        btxB.setString(a);
+    }
+
     private class Replacement {
 
         public String original;
