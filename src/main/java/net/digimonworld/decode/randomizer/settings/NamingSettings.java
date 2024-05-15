@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.nio.file.StandardCopyOption;
@@ -17,6 +16,9 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.util.NoSuchElementException;
+import java.util.regex.PatternSyntaxException;
 
 import org.controlsfx.control.ToggleSwitch;
 
@@ -49,31 +51,38 @@ import net.digimonworld.decode.randomizer.DecodeRandomizer;
 
 public class NamingSettings implements Setting {
 
-    private List<String> skippable = List.of("", "None", "Unused Item", "???", "NO DATA", "n");
-    private BooleanProperty renameEnabled = new SimpleBooleanProperty();
-    private BooleanProperty randomizeEnabled = new SimpleBooleanProperty();
-    private BooleanProperty camelCase = new SimpleBooleanProperty(true);
-    private BooleanProperty manualCsv = new SimpleBooleanProperty();
-    private BooleanProperty replaceAll = new SimpleBooleanProperty();
-    private BooleanProperty pickle = new SimpleBooleanProperty(false);
-    private BooleanProperty ogre = new SimpleBooleanProperty(false);
-    private BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
+    private final List<String> skippable = List.of("", "None", "Unused Item", "???", "NO DATA", "n");
+    private final BooleanProperty renameEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty randomizeEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty camelCase = new SimpleBooleanProperty(true);
+    private final BooleanProperty manualCsv = new SimpleBooleanProperty();
+    private final BooleanProperty replaceAll = new SimpleBooleanProperty();
+    private final BooleanProperty pickle = new SimpleBooleanProperty(false);
+    private final BooleanProperty ogre = new SimpleBooleanProperty(false);
+    private final BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
     private Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
 
     private Accordion mainAc;
+    /**
+     * Visualization of a replacement map:
+     * <p>
+     * { "part0/arcv/Keep/LanguageKeep_jp.res/11:12": [ [0,4,2], [8,13,-1] ] }
+     */
     // The tuple inside the ArrayList works like this: [0]
-    public Map<String, ArrayList<int[]>> replacmentMap = new HashMap<>();
+    public Map<String, ArrayList<int[]>> replacementMap = new HashMap<>();
 
     private class Replacement {
+
         public String original;
         public String replacement;
-        private List<String> excludedTerms;
+        private final List<String> excludedTerms;
         private List<PathPosition> disabledPaths;
-        private int matchLength;
+        private final int matchLength;
         private int index = -1;
         public boolean global = true;
 
         private class PathPosition {
+
             public int line = 0;
             public int col = 0;
             public String path = "";
@@ -83,16 +92,17 @@ public class NamingSettings implements Setting {
                 if (pathDescriptor.equals("")) {
                     this.valid = false;
                     return;
-                } else {
-
-                    String[] splitter = pathDescriptor.split(":", -1);
-                    this.path = splitter[0];
-                    this.line = Integer.parseInt(splitter[1]);
-                    if (splitter[2] == null)
-                        this.col = 0;
-                    else
-                        this.col = Integer.parseInt(splitter[2]);
                 }
+
+                String[] splitter = pathDescriptor.split(":", -1);
+                this.path = splitter[0];
+                this.line = Integer.parseInt(splitter[1]);
+                if (splitter[2] == null) {
+                    this.col = 0;
+                } else {
+                    this.col = Integer.parseInt(splitter[2]);
+                }
+
             }
         }
 
@@ -102,7 +112,7 @@ public class NamingSettings implements Setting {
             this.original = original;
 
             List<String> digiNamePaths = List.of(11, 27, 28).stream()
-                    .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).toList();
+                    .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).collect(Collectors.toList());
 
             boolean digiName = digiNamePaths.contains(origin);
 
@@ -128,12 +138,12 @@ public class NamingSettings implements Setting {
             this.matchLength = original.length();
             this.excludedTerms = List.of(rawExcludedTerms.split(","));
             String[] pathos = rawDisabledPaths.split(",");
-            for (int i = 0; i < pathos.length; i++) {
-                String p = pathos[i];
-                if (p.toLowerCase().equals("all"))
+            for (String p : pathos) {
+                if (p.toLowerCase().equals("all")) {
                     this.global = false;
-                else if (!p.equals(""))
+                } else if (!p.equals("")) {
                     this.disabledPaths.add(new PathPosition(rawDisabledPaths));
+                }
             }
         }
 
@@ -143,46 +153,51 @@ public class NamingSettings implements Setting {
         }
 
         private int realPosition(String path, int index) {
-            ArrayList<int[]> repls = replacmentMap.get(path);
-            if (repls == null)
+            ArrayList<int[]> repls = replacementMap.get(path);
+            if (repls == null) {
                 return index;
+            }
             int finalOffset = 0;
             for (int i = 0; i < repls.size(); i++) {
                 int[] current = repls.get(i);
                 int start = current[0];
                 int offset = current[2];
-                if (start > index)
+                if (start > index) {
                     break;
+                }
                 finalOffset += offset;
             }
             return index + finalOffset;
         }
 
         private boolean isOverlapping(String path, int index) {
-            ArrayList<int[]> repls = replacmentMap.get(path);
-            if (repls == null)
+            ArrayList<int[]> repls = replacementMap.get(path);
+            if (repls == null) {
                 return false;
+            }
             int pos = realPosition(path, index);
             for (int i = 0; i < repls.size(); i++) {
                 int[] current = repls.get(i);
                 int start = current[0];
                 int end = current[1];
-                if (start > pos)
+                if (start > pos) {
                     break;
-                if (end < pos)
+                }
+                if (end < pos) {
                     return true;
+                }
 
             }
             return false;
         }
 
         private void insertRepData(String path, int start, int end, int offset) {
-            ArrayList<int[]> repls = replacmentMap.get(path);
-            int[] entry = new int[] { start, end, offset };
+            ArrayList<int[]> repls = replacementMap.get(path);
+            int[] entry = new int[]{start, end, offset};
             if (repls == null) {
                 ArrayList<int[]> newList = new ArrayList<>();
                 newList.add(entry);
-                replacmentMap.put(path, newList);
+                replacementMap.put(path, newList);
                 return;
             }
             for (int i = 0; i < entry.length; i++) {
@@ -199,11 +214,13 @@ public class NamingSettings implements Setting {
             for (int i = 0; i < excludedTerms.size(); i++) {
                 String term = excludedTerms.get(i);
                 int exDex = text.indexOf(term);
-                if (exDex == -1)
+                if (exDex == -1) {
                     continue;
+                }
                 int subDex = term.indexOf(original);
-                if (exDex + subDex == index)
+                if (exDex + subDex == index) {
                     return true;
+                }
             }
             return false;
         }
@@ -214,8 +231,9 @@ public class NamingSettings implements Setting {
             int col = posData[1];
             for (int i = 0; i < disabledPaths.size(); i++) {
                 PathPosition p = disabledPaths.get(i);
-                if (p.path == path && p.line == line && (p.col == 0 || p.col == col))
+                if (p.path.equals(path) && p.line == line && (p.col == 0 || p.col == col)) {
                     return true;
+                }
             }
             return false;
         }
@@ -226,33 +244,33 @@ public class NamingSettings implements Setting {
             int lineNo = splitlist.size();
             int linePos = index - subtext.lastIndexOf("\n");
 
-            return new int[] { lineNo, linePos };
+            return new int[]{lineNo, linePos};
         }
 
         private boolean findInText(String text, String path) {
             int idx = text.indexOf(original);
-            if (idx == -1 || termExclusion(text, idx) || pathExclusion(text, path, idx) || isOverlapping(path, idx))
-                return false;
-            return true;
+            return !(idx == -1 || termExclusion(text, idx) || pathExclusion(text, path, idx) || isOverlapping(path, idx));
         }
 
     }
 
     private ArrayList<String> getNameListMethods(LanguageKeep lang) {
-        ArrayList<String> methodList = new ArrayList<String>();
+        ArrayList<String> methodList = new ArrayList<>();
         Method[] methods = lang.getClass().getMethods();
-        for (int i = 0; i < methods.length; i++) {
-            String methodName = methods[i].getName();
-            if (methodName.contains("Names"))
+        for (Method method : methods) {
+            String methodName = method.getName();
+            if (methodName.contains("Names")) {
                 methodList.add(methodName);
+            }
         }
         return methodList;
     }
 
     boolean clearExportDir(File dir) {
         try {
-            if (dir.exists())
+            if (dir.exists()) {
                 Files.walkFileTree(dir.toPath(), new DeleteDirectoryFileVisitor());
+            }
         } catch (IOException exc) {
             exc.printStackTrace();
             return false;
@@ -262,24 +280,21 @@ public class NamingSettings implements Setting {
     }
 
     private EventHandler<ActionEvent> buildHandler(String resourcePath, File targetDir) {
-        return new EventHandler<>() {
-            public void handle(ActionEvent e) {
-                e.consume();
-                clearExportDir(targetDir);
-                URL origin = DecodeRandomizer.class.getResource(resourcePath);
-                if (origin == null)
-                    return;
-                List<File> fls = Utils.listFiles(new File(origin.getFile()));
-                fls.forEach(f -> {
-                    try {
-                        Files.copy(f.toPath(), new File(targetDir.toString() + "/" + f.getName()).toPath(),
-                                StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException exc) {
-                        exc.printStackTrace();
-                        return;
-                    }
-                });
+        return (ActionEvent e) -> {
+            e.consume();
+            clearExportDir(targetDir);
+            URL origin = DecodeRandomizer.class.getResource(resourcePath);
+            if (origin == null) {
+                return;
             }
+            List<File> fls = Utils.listFiles(new File(origin.getFile()));
+            fls.forEach(f -> {
+                try {
+                    Files.copy(f.toPath(), new File(targetDir.toString() + "/" + f.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException exc) {
+                    exc.printStackTrace();
+                }
+            });
         };
     }
 
@@ -307,14 +322,10 @@ public class NamingSettings implements Setting {
 
         ToggleSwitch camel = JavaFXUtils.buildToggleSwitch("camelCase names", Optional.empty(), Optional.of(camelCase));
         ToggleSwitch manCs = JavaFXUtils.buildToggleSwitch("use Manual CSV", Optional.empty(), Optional.of(manualCsv));
-        ToggleSwitch orgeCheck = JavaFXUtils.buildToggleSwitch("'Ogremon' spelling", Optional.empty(),
-                Optional.of(ogre));
-        ToggleSwitch pickleCheck = JavaFXUtils.buildToggleSwitch("'Picklemon' spelling", Optional.empty(),
-                Optional.of(pickle));
-        ToggleSwitch blackCheck = JavaFXUtils.buildToggleSwitch("Always use 'Black' as prefix", Optional.empty(),
-                Optional.of(blackPrefix));
-        ToggleSwitch repAll = JavaFXUtils.buildToggleSwitch("Replace terms in ALL text", Optional.empty(),
-                Optional.of(replaceAll));
+        ToggleSwitch orgeCheck = JavaFXUtils.buildToggleSwitch("'Ogremon' spelling", Optional.empty(), Optional.of(ogre));
+        ToggleSwitch pickleCheck = JavaFXUtils.buildToggleSwitch("'Picklemon' spelling", Optional.empty(), Optional.of(pickle));
+        ToggleSwitch blackCheck = JavaFXUtils.buildToggleSwitch("Always use 'Black' as prefix", Optional.empty(), Optional.of(blackPrefix));
+        ToggleSwitch repAll = JavaFXUtils.buildToggleSwitch("Replace terms in ALL text", Optional.empty(), Optional.of(replaceAll));
 
         BooleanBinding manLink = new When(renameEnabled).then(manualCsv).otherwise(renameEnabled.not());
 
@@ -325,41 +336,38 @@ public class NamingSettings implements Setting {
         pickleCheck.disableProperty().bind(manLink);
         camel.disableProperty().bind(manLink);
 
-        EventHandler<ActionEvent> rawExportHandler = new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                event.consume();
-                ArrayList<String> methodList = getNameListMethods(language);
+        EventHandler<ActionEvent> rawExportHandler = (ActionEvent event) -> {
+            event.consume();
+            ArrayList<String> methodList = getNameListMethods(language);
 
-                System.out.println(methodList);
-                clearExportDir(csvDir);
-                methodList.forEach(s -> {
-                    ArrayList<Tuple<Integer, String>> myList = new ArrayList<>();
-                    try {
-                        BTXPayload btx = (BTXPayload) language.getClass().getMethod(s).invoke(language);
-                        btx.getEntries().stream()
-                                .forEach(e -> myList
-                                        .add(new Tuple<Integer, String>(e.getKey(), e.getValue().getString())));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            System.out.println(methodList);
+            clearExportDir(csvDir);
+            methodList.forEach(s -> {
+                ArrayList<Tuple<Integer, String>> myList = new ArrayList<>();
+                try {
+                    BTXPayload btx = (BTXPayload) language.getClass().getMethod(s).invoke(language);
+                    btx.getEntries().stream()
+                            .forEach(e -> myList
+                            .add(new Tuple<Integer, String>(e.getKey(), e.getValue().getString())));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                    File destFile = new File("./renamingPresets/" + s.substring(3) + ".csv");
-                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(destFile, StandardCharsets.UTF_8))) {
+                File destFile = new File("./renamingPresets/" + s.substring(3) + ".csv");
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(destFile, StandardCharsets.UTF_8))) {
 
-                        writer.write("index;original;replace;excludeTerms;excludePaths\n");
-                        String string = myList.stream()
-                                .filter(str -> !skippable.contains(str.getValue()))
-                                .map(str -> str.getKey().toString() + ';' + str.getValue() + ";" + str.getValue())
-                                .collect(Collectors.joining(";;\n"))
-                                + ";;";
+                    writer.write("index;original;replace;excludeTerms;excludePaths\n");
+                    String string = myList.stream()
+                            .filter(str -> !skippable.contains(str.getValue()))
+                            .map(str -> str.getKey().toString() + ';' + str.getValue() + ";" + str.getValue())
+                            .collect(Collectors.joining(";;\n"))
+                            + ";;";
 
-                        writer.write(string);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                });
-            }
+                    writer.write(string);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         };
 
         Button camelExp = new Button("Export CSVs for restoration preset");
@@ -385,9 +393,10 @@ public class NamingSettings implements Setting {
     }
 
     private class PathResolver {
-        private RandomizationContext context;
-        public Map<String, String> shortcuts = new HashMap<>();
-        public Map<String, String> keepMap = new HashMap<>();
+
+        private final RandomizationContext context;
+        private final Map<String, String> shortcuts = new HashMap<>();
+        public final Map<String, String> keepMap = new HashMap<>();
 
         public PathResolver(RandomizationContext context) {
             this.context = context;
@@ -398,6 +407,7 @@ public class NamingSettings implements Setting {
             this.keepMap.put("KeyItemNames", "3");
             this.keepMap.put("AccessoryNames", "5");
             this.keepMap.put("SkillNames", "7");
+            this.keepMap.put("FinisherNames", "9");
             this.keepMap.put("CharacterNames", "13");
             this.keepMap.put("NatureNames", "16");
             this.keepMap.put("MedalNames", "17");
@@ -407,17 +417,22 @@ public class NamingSettings implements Setting {
             this.keepMap.put("CardSetNames", "30");
         }
 
-        public Tuple<String, BTXPayload> resolve(String path) {
+        public Tuple<String, BTXPayload> resolve(String path) throws ParseException {
             ArrayList<String> frag = new ArrayList<>(
                     List.of((keepMap.containsKey(path) ? ("keep-" + keepMap.get(path)) : path).split("-")));
             int btxIndex = Integer.parseInt(frag.remove(frag.size() - 1));
             String finalPath = "part0/arcv/" + frag.stream()
                     .map(s -> shortcuts.containsKey(s) ? shortcuts.get(s) : s)
                     .collect(Collectors.joining("/"));
-            NormalKCAP pk = (NormalKCAP) context.getFile(finalPath).get();
-            if (frag.get(frag.size() - 1).equals("keep"))
-                pk = (NormalKCAP) pk.get(0);
-            return new Tuple<String, BTXPayload>(finalPath + "/" + btxIndex, (BTXPayload) pk.get(btxIndex));
+            try {
+                NormalKCAP pk = (NormalKCAP) context.getFile(finalPath).get();
+                if (frag.get(frag.size() - 1).equals("keep")) {
+                    pk = (NormalKCAP) pk.get(0);
+                }
+                return new Tuple<>(finalPath + "/" + btxIndex, (BTXPayload) pk.get(btxIndex));
+            } catch (NoSuchElementException exc) {
+                throw new ParseException("csv not correctly mapped", 0);
+            }
         }
     }
 
@@ -427,15 +442,18 @@ public class NamingSettings implements Setting {
             List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
             ArrayList<Replacement> reps = new ArrayList<>();
             for (int i = 0; i < lines.size(); i++) {
-                if (i == 0)
+                if (i == 0) {
                     continue;
+                }
                 String[] entries = lines.get(i).split(";", -1);
-                if (entries[1].equals(entries[2]))
+                if (entries[1].equals(entries[2])) {
                     continue;
+                }
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
                 rep.replaceExact(btx);
-                if (replaceAll.get() && rep.global)
+                if (replaceAll.get() && rep.global) {
                     reps.add(rep);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -445,8 +463,9 @@ public class NamingSettings implements Setting {
     @Override
     public void randomize(RandomizationContext context) {
         String mode = mainAc.getExpandedPane().getId();
-        if (!(mode.equals("restore") ? renameEnabled.get() : randomizeEnabled.get()))
+        if (!(mode.equals("restore") ? renameEnabled.get() : randomizeEnabled.get())) {
             return;
+        }
 
         PathResolver res = new PathResolver(context);
         if (mode.equals("restore")) {
@@ -459,14 +478,19 @@ public class NamingSettings implements Setting {
                 origin = new File(DecodeRandomizer.class.getResource(resourcePath).getFile());
             }
             List<File> presets = List.of(origin.listFiles());
-            presets.stream().filter(f -> f.getName().contains("-")).forEach(p -> {
+            presets.stream().forEach(p -> {
                 String pName = p.getName();
-                Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
-                targetedBtxReplacement(foundBtx.getValue(), p, foundBtx.getKey());
+                try {
+                    Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
+                    targetedBtxReplacement(foundBtx.getValue(), p, foundBtx.getKey());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             });
 
-            if (!replaceAll.get())
+            if (!replaceAll.get()) {
                 return;
+            }
 
             return;
         }
@@ -484,8 +508,9 @@ public class NamingSettings implements Setting {
 
     @Override
     public void load(YamlMapping map) {
-        if (map == null)
+        if (map == null) {
             return;
+        }
 
         YamlSequence list = map.yamlSequence("checked");
         List<Integer> activeList = list == null ? new ArrayList<>()
