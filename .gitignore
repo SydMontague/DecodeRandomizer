@@ -16,3 +16,4 @@ config.yml
 *.cci
 /.vscode
 /renamingPresets
+dependency-reduced-pom.xml

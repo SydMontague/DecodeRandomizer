@@ -82,7 +82,6 @@ public class NamingSettings implements Setting {
      * exclude replacing matches at specific indices in a line based on the
      * original file.
      */
-    // The tuple inside the ArrayList works like this: [0]
     public Map<String, ArrayList<int[]>> replacementMap = new HashMap<>();
 
     protected enum TermType {
@@ -142,17 +141,13 @@ public class NamingSettings implements Setting {
             }
         }
 
-        public Replacement(String index, String original, String replacement, String rawExcludedTerms,
-                String rawDisabledPaths, String origin) {
+        public Replacement(String index, String original, String replacement, String rawExcludedTerms, String rawDisabledPaths, String origin) {
             this.index = Integer.parseInt(index);
             this.original = original;
 
-            List<String> digiNamePaths = List.of(11, 27, 28).stream()
-                    .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).collect(Collectors.toList());
+            TermType tType = classifyTerm(replacement, origin);
 
-            boolean digiName = digiNamePaths.contains(origin);
-
-            if (!manualCsv.get()) {
+            if (!manualCsv.get() && tType != TermType.GENERAL) {
                 if (ogre.get() && replacement.equals("Orgemon")) {
                     this.replacement = "Ogremon";
                 }
@@ -167,7 +162,7 @@ public class NamingSettings implements Setting {
                 this.replacement = replacement;
             }
 
-            if (digiName && !camelCase.get()) {
+            if (tType == TermType.DIGIMONMULTI && !camelCase.get()) {
                 this.replacement = this.replacement.replaceAll("([a-z])([A-Z])", "$1 $2");
             }
 
@@ -183,9 +178,13 @@ public class NamingSettings implements Setting {
             }
         }
 
-        public void replaceExact(BTXPayload btx) {
+        public void replaceExact(BTXPayload btx, String path) {
             BTXEntry entry = btx.getEntryById(index).get();
-            entry.setString(replacement);
+            if (!original.equals(replacement)) {
+                entry.setString(replacement);
+            }
+            // Exact replacements block any future replacements on this particular line.
+            insertRepData(path, -1, Integer.MAX_VALUE, 0);
         }
 
         private int realPosition(String path, int index) {
@@ -228,15 +227,15 @@ public class NamingSettings implements Setting {
         }
 
         private void insertRepData(String path, int start, int end, int offset) {
-            ArrayList<int[]> repls = replacementMap.get(path);
             int[] entry = new int[]{start, end, offset};
-            if (repls == null) {
+            if (!replacementMap.containsKey(path)) {
                 ArrayList<int[]> newList = new ArrayList<>();
                 newList.add(entry);
                 replacementMap.put(path, newList);
                 return;
             }
-            for (int i = 0; i < entry.length; i++) {
+            ArrayList<int[]> repls = replacementMap.get(path);
+            for (int i = 0; i < repls.size(); i++) {
                 int current = repls.get(i)[0];
                 if (current > start) {
                     repls.add(i, entry);
@@ -482,11 +481,12 @@ public class NamingSettings implements Setting {
                     continue;
                 }
                 String[] entries = lines.get(i).split(";", -1);
-                if (entries[1].equals(entries[2])) {
+                // Even if we don't replace a term, if it's a multipart Digimon name it will be changed if the camelCase option is not set.
+                if (entries[1].equals(entries[2]) && (camelCase.get() || classifyTerm(entries[2], path) != TermType.DIGIMONMULTI)) {
                     continue;
                 }
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
-                rep.replaceExact(btx);
+                rep.replaceExact(btx, path);
                 if (replaceAll.get() && rep.global) {
                     reps.add(rep);
                 }
@@ -528,7 +528,26 @@ public class NamingSettings implements Setting {
                 return;
             }
 
-            return;
+        } else {
+
+            try {
+                BTXPayload btx = res.resolve("keep-11").getValue();
+
+                Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
+
+                ArrayList<BTXEntry> ents = new ArrayList<>(btx.getEntries().stream().map(e -> e.getValue()).collect(Collectors.toList()));
+
+                while (ents.size() > 1) {
+                    int i = rand.nextInt(ents.size());
+                    BTXEntry btxA = ents.remove(i);
+                    int n = rand.nextInt(ents.size());
+                    BTXEntry btxB = ents.remove(n);
+                    System.out.println(i + " " + n);
+                    btxSwitch(btxA, btxB);
+                }
+            } catch (ParseException e) {
+            }
+
         }
 
     }
