@@ -34,13 +34,13 @@ public class RandomizerSettings {
     public void randomize(RandomizationContext context) {
         logSettings(context);
 
+        namingSettings.randomize(context);
         patchSettings.randomize(context);
         skillSettings.randomize(context);
         digimonSettings.randomize(context);
         evolutionSettings.randomize(context);
         starterSettings.randomize(context);
         worldSettings.randomize(context);
-        namingSettings.randomize(context);
         playerSettings.randomize(context);
     }
 
