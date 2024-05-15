@@ -92,6 +92,7 @@ public class NamingSettings implements Setting {
     }
 
     private static TermType classifyTerm(String term, String path) {
+        //These files contain digimon names
         List<String> digiNamePaths = List.of(11, 27, 28).stream()
                 .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).collect(Collectors.toList());
         if (!digiNamePaths.contains(path)) {
@@ -100,7 +101,7 @@ public class NamingSettings implements Setting {
         return term.matches("[a-z][A-Z]") ? TermType.DIGIMONMULTI : TermType.DIGIMON;
     }
 
-    private void btxSwitch(BTXEntry btxA, BTXEntry btxB) {
+    private static void btxSwitch(BTXEntry btxA, BTXEntry btxB) {
         String a = btxA.getString();
         String b = btxB.getString();
         btxA.setString(b);
@@ -302,7 +303,7 @@ public class NamingSettings implements Setting {
         return methodList;
     }
 
-    boolean clearExportDir(File dir) {
+    private static boolean clearExportDir(File dir) {
         try {
             if (dir.exists()) {
                 Files.walkFileTree(dir.toPath(), new DeleteDirectoryFileVisitor());
@@ -315,7 +316,7 @@ public class NamingSettings implements Setting {
         return true;
     }
 
-    private EventHandler<ActionEvent> buildHandler(String resourcePath, File targetDir) {
+    private static EventHandler<ActionEvent> buildHandler(String resourcePath, File targetDir) {
         return (ActionEvent e) -> {
             e.consume();
             clearExportDir(targetDir);
@@ -518,8 +519,7 @@ public class NamingSettings implements Setting {
             if (manualCsv.get() && manualCsvDir.exists()) {
                 origin = manualCsvDir;
             } else {
-                String resourcePath = "renamingPresets/";
-                origin = new File(DecodeRandomizer.class.getResource(resourcePath).getFile());
+                origin = new File(DecodeRandomizer.class.getResource("renamingPresets/").getFile());
             }
             List<File> presets = List.of(origin.listFiles());
             presets.stream().forEach(p -> {
