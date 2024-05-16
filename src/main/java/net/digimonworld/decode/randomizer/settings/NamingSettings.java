@@ -205,7 +205,7 @@ public class NamingSettings implements Setting {
                 System.out.println(original + " -> " + replacement);
             }
             // Exact replacements block any future replacements on this particular line.
-            insertRepData(path, -1, Integer.MAX_VALUE, 0);
+            insertRepData(path + ":" + index, -1, Integer.MAX_VALUE, 0);
         }
 
         private int correctApostrophe(BTXEntry btx, int start, int end) {
@@ -233,6 +233,7 @@ public class NamingSettings implements Setting {
             if (matchStart == -1) {
                 return;
             }
+
             int matchEnd = matchStart + matchLength;
             btx.setString(origText.substring(0, matchStart) + replacement + origText.substring(matchEnd, origText.length()));
 
@@ -242,8 +243,7 @@ public class NamingSettings implements Setting {
             matchStart = matchStart + artOff;
             matchEnd = matchEnd + apOff;
             int finalOffset = baseOffset + artOff + apOff;
-            System.out.println(finalOffset);
-            System.out.println(origText.substring(matchStart, matchEnd) + " -> " + btx.getString().substring(matchStart, matchEnd + finalOffset));
+            System.out.println(path + " | " + origText.substring(matchStart, matchEnd) + " -> " + btx.getString().substring(matchStart, matchEnd + finalOffset));
 
             insertRepData(path, matchStart, matchEnd, finalOffset);
         }
@@ -270,15 +270,16 @@ public class NamingSettings implements Setting {
             if (repls == null) {
                 return false;
             }
+
             int pos = realPosition(path, index);
             for (int[] current : repls) {
                 int start = current[0];
                 int end = current[1];
                 // If the start position is bigger than the end of our match we don't need to check the rest
-                if (start > pos + matchLength) {
+                if (start <= pos + (matchLength - 1)) {
                     break;
                 }
-                if (end < pos) {
+                if (end >= pos && start < pos) {
                     return true;
                 }
 
@@ -506,6 +507,14 @@ public class NamingSettings implements Setting {
             this.keepMap.put("CardSetNames", "30");
         }
 
+        public ResPayload resolveRaw(String finalPath) throws IOException {
+            try {
+                return context.getFile(finalPath).get();
+            } catch (NoSuchElementException exc) {
+                throw new IOException("Path " + finalPath + " does not exist.");
+            }
+        }
+
         public Tuple<String, BTXPayload> resolve(String path) throws ParseException {
             ArrayList<String> frag = new ArrayList<>(
                     List.of((keepMap.containsKey(path) ? ("keep-" + keepMap.get(path)) : path).split("-")));
@@ -583,36 +592,37 @@ public class NamingSettings implements Setting {
 
             File startDir = new File(".\\working\\part0\\arcv\\");
 
-            //Shamelessly copied from the DecodeTools CSV export
             Utils.listFiles(startDir).stream()
                     //Everything that could contain BTX
-                    .filter(s -> s.getName().endsWith(".bin") || s.getName().endsWith(".pack") || s.getName().endsWith("_jp.res")).forEach(fA -> {
+                    .filter(s
+                            -> //s.getName().endsWith(".pack") || 
+                            s.getName().endsWith("_jp.res")
+                    ).forEach(fA -> {
 
-                try (Access b = new FileAccess(fA)) {
-                    ResPayload f = ResPayload.craft(b);
-                    var elements = f.getElementsWithType(Payload.BTX);
-                    if (elements.isEmpty()) {
-                        return;
-                    }
-                    Path pathos = fA.toPath();
-                    Path pString = pathos.subpath(2, pathos.getNameCount());
-                    System.out.println("Replacing text in " + pString.toString());
+                        try {
+                            Path pathos = fA.toPath();
+                            Path pString = pathos.subpath(2, pathos.getNameCount());
 
-                    for (int i = 0; i < elements.size(); i++) {
-                        var payload = (BTXPayload) elements.get(i);
-                        String partialPath = pathos.toString() + "\\" + (i);
-                        payload.getEntries().forEach(bt -> {
-                            repMap.values().forEach(rep -> {
-                                rep.replaceDynamic(bt.getValue(), partialPath + ":" + bt.getKey());
-                            });
+                            var elements = res.resolveRaw(pString.toString()).getElementsWithType(Payload.BTX);
+                            if (elements.isEmpty()) {
+                                return;
+                            }
 
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                            for (int i = 0; i < elements.size(); i++) {
+                                var payload = (BTXPayload) elements.get(i);
+                                String partialPath = pString.toString() + "\\" + (i);
+                                payload.getEntries().forEach(bt -> {
+                                    repMap.values().forEach(rep -> {
+                                        rep.replaceDynamic(bt.getValue(), partialPath + ":" + bt.getKey());
+                                    });
 
-            });
+                                });
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    });
 
             repMap.clear();
 
