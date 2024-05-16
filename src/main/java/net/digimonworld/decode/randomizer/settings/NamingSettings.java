@@ -207,7 +207,8 @@ public class NamingSettings implements Setting {
             insertRepData(path + ":" + index, -1, Integer.MAX_VALUE, 0);
         }
 
-        private int correctApostrophe(BTXEntry btx, int start, int end) {
+        //Fixing mistakes like Davis' -> Daisuke' etc
+        private int correctApostrophe(BTXEntry btx, int end) {
             if (!diffS) {
                 return 0;
             }
@@ -215,14 +216,43 @@ public class NamingSettings implements Setting {
             if (text.length() == end) {
                 return 0;
             }
-            return 0;
+            if (replacement.endsWith("s")) {
+                // remove s after apostrophe
+                if (text.substring(end, Math.min(end + 2, text.length())).equals("'s")) {
+                    btx.setString(text.substring(0, end + 1) + text.substring(end + 2));
+                    return -1;
+                } else {
+                    return 0;
+                }
+            } else {
+                // add s after apostrophe
+                if (text.substring(end, Math.min(end + 1, text.length())).equals("'")) {
+                    btx.setString(text.substring(0, end + 1) + "s" + text.substring(end + 1));
+                    return 1;
+                }
+                return 0;
+            }
         }
 
-        private int correctArticle(BTXEntry btx, int start, int end) {
+        //Fixing mistakes like "a Scorpiomon" -> "a Anomalicarimon"
+        private int correctArticle(BTXEntry btx, int start) {
             if (!diffArt || start == 0) {
                 return 0;
             }
-            return 0;
+            String text = btx.getString();
+            if (vow.contains(replacement.substring(0, 1))) {
+                if (text.substring(Math.max(0, start - 3), start).matches(".*\ba\b.*")) {
+                    btx.setString(text.substring(0, start - 1) + "n" + text.substring(start - 1));
+                    return 1;
+                }
+                return 0;
+            } else {
+                if (text.substring(Math.max(0, start - 4), start).matches(".*\ban\b.*")) {
+                    btx.setString(text.substring(0, start - 2) + text.substring(start - 1));
+                    return -1;
+                }
+                return 0;
+            }
         }
 
         public void replaceDynamic(BTXEntry btx, String path) {
@@ -233,10 +263,10 @@ public class NamingSettings implements Setting {
             }
 
             int matchEnd = matchStart + matchLength;
-            btx.setString(origText.substring(0, matchStart) + replacement + origText.substring(matchEnd, origText.length()));
+            btx.setString(origText.substring(0, matchStart) + replacement + origText.substring(matchEnd));
 
-            int artOff = correctArticle(btx, matchStart, matchEnd);
-            int apOff = correctApostrophe(btx, matchStart, matchEnd);
+            int artOff = correctArticle(btx, matchStart);
+            int apOff = correctApostrophe(btx, matchEnd);
 
             matchStart = matchStart + artOff;
             matchEnd = matchEnd + apOff;
