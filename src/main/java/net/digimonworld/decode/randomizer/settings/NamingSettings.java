@@ -120,7 +120,7 @@ public class NamingSettings implements Setting {
         public String original;
         public String replacement;
         private final List<String> excludedTerms;
-        private final List<PathPosition> disabledPaths = List.of();
+        private final ArrayList<PathPosition> disabledPaths = new ArrayList();
         private final int matchLength;
         private int index = -1;
         private final boolean diffS;
@@ -594,14 +594,13 @@ public class NamingSettings implements Setting {
             File startDir = new File(".\\working\\part0\\arcv\\");
 
             //Sorting 
-            List<Replacement> sortedReps = repMap.values().stream().sorted(Comparator.comparing(v -> v.original.length())).collect(Collectors.toList());
-
+            List<Replacement> sortedReps = repMap.values().stream().sorted(Comparator.comparing(v -> v.original.length() * -1)).collect(Collectors.toList());
+            ArrayList<Tuple<String, BTXEntry>> fileEntries = new ArrayList();
             Utils.listFiles(startDir).stream()
                     //Everything that could contain BTX
                     .filter(s -> s.getName().endsWith("_jp.res")
                     || s.getName().endsWith(".pack")
                     ).forEach(fA -> {
-
                         try {
                             Path longPath = fA.toPath();
                             Path normalPath = longPath.subpath(2, longPath.getNameCount());
@@ -610,21 +609,20 @@ public class NamingSettings implements Setting {
                             if (elements.isEmpty()) {
                                 return;
                             }
-
                             for (int i = 0; i < elements.size(); i++) {
                                 var payload = (BTXPayload) elements.get(i);
                                 String partialPath = normalPath.toString() + "\\" + (i);
                                 payload.getEntries().forEach(bt -> {
-                                    sortedReps.forEach(rep -> {
-                                        rep.replaceDynamic(bt.getValue(), partialPath + ":" + bt.getKey());
-                                    });
+                                    fileEntries.add(new Tuple(partialPath + ":" + bt.getKey(), bt.getValue()));
                                 });
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-
                     });
+            sortedReps.forEach(rep -> {
+                fileEntries.forEach(t -> rep.replaceDynamic(t.getValue(), t.getKey()));
+            });
 
             repMap.clear();
             replacementMap.clear();
