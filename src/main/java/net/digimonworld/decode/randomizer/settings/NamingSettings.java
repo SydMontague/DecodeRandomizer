@@ -192,7 +192,7 @@ public class NamingSettings implements Setting {
                 if (p.toLowerCase().equals("all")) {
                     this.global = false;
                 } else if (!p.equals("")) {
-                    this.disabledPaths.add(new PathPosition(rawDisabledPaths));
+                    this.disabledPaths.add(new PathPosition(p));
                 }
             }
         }
