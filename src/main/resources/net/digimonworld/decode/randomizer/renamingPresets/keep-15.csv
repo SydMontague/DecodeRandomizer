@@ -16,7 +16,7 @@ index;original;replace;excludeTerms;excludePaths
 14;Rookie;Child;;
 15;Champion;Adult;Digimon\n$,Colosseum $,Tenkaichi $,You're the $;
 16;Ultimate;Perfect;$ Piece,$ X Antibody,$Brachiomon,$Brachimon,$ Stream,$ body,$ victory,$ Sacrifice,$ Ouryuken,$ Poop Hell,$ Weapon,$ Cup,$ Herbal,$ Slicer,$ Enemy,$ Thunder,$\nBlast,$ Quake;
-17;Mega;Ultimate;$ Meat,$ Blaster;$seadramon,$dramon,$Seadramon,$ Burst,$battle,$ly;
+17;Mega;Ultimate;$ Meat,$ Blaster,$seadramon,$dramon,$Seadramon,$ Burst,$battle,$ly;
 18;Armor;Armor;;
 19;Special;Special;;
 20;Attribute;Attribute;;
