@@ -68,6 +68,7 @@ public class NamingSettings implements Setting {
     private final Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
     private final Map<String, BooleanProperty> randoMap = new HashMap<>();
     private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
+    private final List<String> priorities = List.of("DigimonNames.csv", "CardNames1.csv");
     private final Map<String, Replacement> repMap = new HashMap<>();
 
     private Accordion mainAc;
@@ -354,7 +355,7 @@ public class NamingSettings implements Setting {
             return false;
         }
 
-        private boolean pathExclusion(String text, String path, int index) {
+        private boolean pathExclusion(String path, int index) {
             for (PathPosition p : disabledPaths) {
                 if (p.path.equals(path) && (p.col == -1 || p.col == index)) {
                     return true;
@@ -366,7 +367,7 @@ public class NamingSettings implements Setting {
         private int findInText(String text, String path) {
             int idx = text.indexOf(original);
             //If any of the exclusion 
-            return (idx == -1 || termExclusion(text, idx) || pathExclusion(text, path, idx) || isOverlapping(path, idx)) ? -1 : idx;
+            return (idx == -1 || termExclusion(text, idx) || pathExclusion(path, idx) || isOverlapping(path, idx)) ? -1 : idx;
         }
 
     }
@@ -607,7 +608,7 @@ public class NamingSettings implements Setting {
                 origin = new File(DecodeRandomizer.class.getResource("renamingPresets/").getFile());
             }
             List<File> presets = List.of(origin.listFiles());
-            presets.forEach(p -> {
+            presets.stream().forEach(p -> {
                 String pName = p.getName();
                 try {
                     Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
@@ -681,6 +682,7 @@ public class NamingSettings implements Setting {
                         btxSwitch(firstEntry, entries.get(0));
                     }
                 } catch (ParseException e) {
+                    e.printStackTrace();
                 }
             });
         }
@@ -707,11 +709,10 @@ public class NamingSettings implements Setting {
         if (map == null) {
             return;
         }
-
-        YamlSequence list = map.yamlSequence("checked");
-        List<Integer> activeList = list == null ? new ArrayList<>()
-                : list.values().stream().map(a -> Integer.parseInt(a.asScalar().value())).collect(Collectors.toList());
-        propertyMap.forEach((a, b) -> b.set(activeList.contains(a)));
+        YamlSequence list = map.yamlSequence("randomChecked");
+        List<String> activeList = list == null ? new ArrayList<>()
+                : list.values().stream().map(a -> a.toString()).collect(Collectors.toList());
+        randoMap.forEach((a, b) -> b.set(activeList.contains(a)));
         renameEnabled.set(Boolean.parseBoolean(map.string("enabled")));
     }
 }
