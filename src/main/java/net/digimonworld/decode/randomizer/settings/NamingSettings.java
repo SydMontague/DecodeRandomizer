@@ -44,9 +44,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Accordion;
 import javafx.scene.layout.VBox;
+
+import java.nio.file.Path;
+
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
 import net.digimonworld.decode.randomizer.DecodeRandomizer;
+import net.digimonworld.decodetools.core.Access;
+import net.digimonworld.decodetools.core.FileAccess;
+import net.digimonworld.decodetools.res.ResPayload;
+import net.digimonworld.decodetools.res.ResPayload.Payload;
 
 public class NamingSettings implements Setting {
 
@@ -55,19 +62,20 @@ public class NamingSettings implements Setting {
     private final BooleanProperty randomizeEnabled = new SimpleBooleanProperty();
     private final BooleanProperty camelCase = new SimpleBooleanProperty(true);
     private final BooleanProperty manualCsv = new SimpleBooleanProperty();
-    private final BooleanProperty replaceAll = new SimpleBooleanProperty();
+    private final BooleanProperty replaceAll = new SimpleBooleanProperty(true);
     private final BooleanProperty pickle = new SimpleBooleanProperty(false);
     private final BooleanProperty ogre = new SimpleBooleanProperty(false);
     private final BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
     private final Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
     private final Map<String, BooleanProperty> randoMap = new HashMap<>();
     private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
+    private final Map<String, Replacement> repMap = new HashMap<>();
 
     private Accordion mainAc;
     /**
      * Visualization of a replacement map:
      *
-     * { "part0/arcv/Keep/LanguageKeep_jp.res/11:12": [ [0,4,2], [8,13,-1] ] }
+     * { "part0\arcv\Keep\LanguageKeep_jp.res\11:12" : [ [0,4,2], [8,13,-1] ] }
      *
      * Path schema works like this:
      *
@@ -94,7 +102,7 @@ public class NamingSettings implements Setting {
     private static TermType classifyTerm(String term, String path) {
         //These files contain digimon names
         List<String> digiNamePaths = List.of(11, 27, 28).stream()
-                .map(n -> "part0/arcv/Keep/LanguageKeep_jp.res/" + n).collect(Collectors.toList());
+                .map(n -> "part0\\arcv\\Keep\\LanguageKeep_jp.res\\" + n).collect(Collectors.toList());
         if (!digiNamePaths.contains(path)) {
             return TermType.GENERAL;
         }
@@ -113,15 +121,19 @@ public class NamingSettings implements Setting {
         public String original;
         public String replacement;
         private final List<String> excludedTerms;
-        private List<PathPosition> disabledPaths;
+        private final List<PathPosition> disabledPaths = List.of();
         private final int matchLength;
         private int index = -1;
+        private final boolean diffS;
+        private final boolean diffArt;
+        private final int baseOffset;
         public boolean global = true;
+        private final List<String> vow = List.of("A", "E", "I", "O", "U", "Ü", "Ö", "Ä");
 
         private class PathPosition {
 
             public int line = 0;
-            public int col = 0;
+            public int col = -1;
             public String path = "";
             public boolean valid = true;
 
@@ -134,8 +146,8 @@ public class NamingSettings implements Setting {
                 String[] splitter = pathDescriptor.split(":", -1);
                 this.path = splitter[0];
                 this.line = Integer.parseInt(splitter[1]);
-                if (splitter[2] == null) {
-                    this.col = 0;
+                if (splitter.length == 1) {
+                    this.col = -1;
                 } else {
                     this.col = Integer.parseInt(splitter[2]);
                 }
@@ -168,7 +180,13 @@ public class NamingSettings implements Setting {
                 this.replacement = this.replacement.replaceAll("([a-z])([A-Z])", "$1 $2");
             }
 
+            this.diffS = replacement.endsWith("s") != original.endsWith("s");
+            this.diffArt = vow.contains(this.replacement.substring(0, 1)) != vow.contains(this.original.substring(0, 1));
+
             this.matchLength = original.length();
+
+            this.baseOffset = replacement.length() - original.length();
+
             this.excludedTerms = List.of(rawExcludedTerms.split(","));
             String[] pathos = rawDisabledPaths.split(",");
             for (String p : pathos) {
@@ -190,14 +208,53 @@ public class NamingSettings implements Setting {
             insertRepData(path, -1, Integer.MAX_VALUE, 0);
         }
 
+        private int correctApostrophe(BTXEntry btx, int start, int end) {
+            if (!diffS) {
+                return 0;
+            }
+            String text = btx.getString();
+            if (text.length() == end) {
+                return 0;
+            }
+
+            return 0;
+        }
+
+        private int correctArticle(BTXEntry btx, int start, int end) {
+            if (!diffArt || start == 0) {
+                return 0;
+            }
+            return 0;
+        }
+
+        public void replaceDynamic(BTXEntry btx, String path) {
+            String origText = btx.getString();
+            int matchStart = findInText(origText, path);
+            if (matchStart == -1) {
+                return;
+            }
+            int matchEnd = matchStart + matchLength;
+            btx.setString(origText.substring(0, matchStart) + replacement + origText.substring(matchEnd, origText.length()));
+
+            int artOff = correctArticle(btx, matchStart, matchEnd);
+            int apOff = correctApostrophe(btx, matchStart, matchEnd);
+
+            matchStart = matchStart + artOff;
+            matchEnd = matchEnd + apOff;
+            int finalOffset = baseOffset + artOff + apOff;
+            System.out.println(finalOffset);
+            System.out.println(origText.substring(matchStart, matchEnd) + " -> " + btx.getString().substring(matchStart, matchEnd + finalOffset));
+
+            insertRepData(path, matchStart, matchEnd, finalOffset);
+        }
+
         private int realPosition(String path, int index) {
             ArrayList<int[]> repls = replacementMap.get(path);
             if (repls == null) {
                 return index;
             }
             int finalOffset = 0;
-            for (int i = 0; i < repls.size(); i++) {
-                int[] current = repls.get(i);
+            for (int[] current : repls) {
                 int start = current[0];
                 int offset = current[2];
                 if (start > index) {
@@ -214,11 +271,11 @@ public class NamingSettings implements Setting {
                 return false;
             }
             int pos = realPosition(path, index);
-            for (int i = 0; i < repls.size(); i++) {
-                int[] current = repls.get(i);
+            for (int[] current : repls) {
                 int start = current[0];
                 int end = current[1];
-                if (start > pos) {
+                // If the start position is bigger than the end of our match we don't need to check the rest
+                if (start > pos + matchLength) {
                     break;
                 }
                 if (end < pos) {
@@ -238,6 +295,7 @@ public class NamingSettings implements Setting {
                 return;
             }
             ArrayList<int[]> repls = replacementMap.get(path);
+            //Keeping the list of replacements of each BTX well ordered by inserting it before the first bigger start value
             for (int i = 0; i < repls.size(); i++) {
                 int current = repls.get(i)[0];
                 if (current > start) {
@@ -249,8 +307,7 @@ public class NamingSettings implements Setting {
         }
 
         private boolean termExclusion(String text, int index) {
-            for (int i = 0; i < excludedTerms.size(); i++) {
-                String term = excludedTerms.get(i);
+            for (String term : excludedTerms) {
                 int exDex = text.indexOf(term);
                 if (exDex == -1) {
                     continue;
@@ -264,30 +321,18 @@ public class NamingSettings implements Setting {
         }
 
         private boolean pathExclusion(String text, String path, int index) {
-            int[] posData = getLinePos(text, realPosition(path, index));
-            int line = posData[0];
-            int col = posData[1];
-            for (int i = 0; i < disabledPaths.size(); i++) {
-                PathPosition p = disabledPaths.get(i);
-                if (p.path.equals(path) && p.line == line && (p.col == 0 || p.col == col)) {
+            for (PathPosition p : disabledPaths) {
+                if (p.path.equals(path) && (p.col == -1 || p.col == index)) {
                     return true;
                 }
             }
             return false;
         }
 
-        private int[] getLinePos(String text, int index) {
-            String subtext = text.substring(0, index);
-            List<String> splitlist = List.of(subtext.split("\n", -1));
-            int lineNo = splitlist.size();
-            int linePos = index - subtext.lastIndexOf("\n");
-
-            return new int[]{lineNo, linePos};
-        }
-
-        private boolean findInText(String text, String path) {
+        private int findInText(String text, String path) {
             int idx = text.indexOf(original);
-            return !(idx == -1 || termExclusion(text, idx) || pathExclusion(text, path, idx) || isOverlapping(path, idx));
+            //If any of the exclusion 
+            return (idx == -1 || termExclusion(text, idx) || pathExclusion(text, path, idx) || isOverlapping(path, idx)) ? -1 : idx;
         }
 
     }
@@ -328,7 +373,7 @@ public class NamingSettings implements Setting {
             List<File> fls = Utils.listFiles(new File(origin.getFile()));
             fls.forEach(f -> {
                 try {
-                    Files.copy(f.toPath(), new File(targetDir.toString() + "/" + f.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(f.toPath(), Path.of(targetDir.toString() + "\\" + f.getName()), StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException exc) {
                     exc.printStackTrace();
                 }
@@ -355,7 +400,7 @@ public class NamingSettings implements Setting {
         randoPane.setId("random");
 
         pane.setCollapsible(false);
-        File csvDir = new File("./renamingPresets/");
+        File csvDir = new File(".\\renamingPresets\\");
         manualCsv.set(csvDir.exists() && csvDir.isDirectory() && csvDir.listFiles().length != 0);
 
         ToggleSwitch camel = JavaFXUtils.buildToggleSwitch("camelCase names", Optional.empty(), Optional.of(camelCase));
@@ -391,7 +436,7 @@ public class NamingSettings implements Setting {
                     e.printStackTrace();
                 }
 
-                File destFile = new File("./renamingPresets/" + s.substring(3) + ".csv");
+                File destFile = new File(".\\renamingPresets\\" + s.substring(3) + ".csv");
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(destFile, StandardCharsets.UTF_8))) {
 
                     writer.write("index;original;replace;excludeTerms;excludePaths\n");
@@ -403,7 +448,6 @@ public class NamingSettings implements Setting {
 
                     writer.write(string);
                 } catch (IOException e) {
-                    e.printStackTrace();
                 }
             });
         };
@@ -411,7 +455,7 @@ public class NamingSettings implements Setting {
         Button camelExp = new Button("Export CSVs for restoration preset");
         Button curExp = new Button("Export CSVs for current names");
         curExp.setOnAction(rawExportHandler);
-        camelExp.setOnAction(buildHandler("renamingPresets/", csvDir));
+        camelExp.setOnAction(buildHandler("renamingPresets\\", csvDir));
 
         restoreBox.getChildren().addAll(
                 JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(renameEnabled)),
@@ -445,8 +489,8 @@ public class NamingSettings implements Setting {
 
         public PathResolver(RandomizationContext context) {
             this.context = context;
-            this.shortcuts.put("keep", "Keep/LanguageKeep_jp.res");
-            this.shortcuts.put("map", "map/text");
+            this.shortcuts.put("keep", "Keep\\LanguageKeep_jp.res");
+            this.shortcuts.put("map", "map\\text");
             this.keepMap.put("DigimonNames", "11");
             this.keepMap.put("ItemNames", "0");
             this.keepMap.put("KeyItemNames", "3");
@@ -466,15 +510,15 @@ public class NamingSettings implements Setting {
             ArrayList<String> frag = new ArrayList<>(
                     List.of((keepMap.containsKey(path) ? ("keep-" + keepMap.get(path)) : path).split("-")));
             int btxIndex = Integer.parseInt(frag.remove(frag.size() - 1));
-            String finalPath = "part0/arcv/" + frag.stream()
+            String finalPath = "part0\\arcv\\" + frag.stream()
                     .map(s -> shortcuts.containsKey(s) ? shortcuts.get(s) : s)
-                    .collect(Collectors.joining("/"));
+                    .collect(Collectors.joining("\\"));
             try {
                 NormalKCAP pk = (NormalKCAP) context.getFile(finalPath).get();
                 if (frag.get(frag.size() - 1).equals("keep")) {
                     pk = (NormalKCAP) pk.get(0);
                 }
-                return new Tuple<>(finalPath + "/" + btxIndex, (BTXPayload) pk.get(btxIndex));
+                return new Tuple<>(finalPath + "\\" + btxIndex, (BTXPayload) pk.get(btxIndex));
             } catch (NoSuchElementException exc) {
                 throw new ParseException("csv not correctly mapped", 0);
             }
@@ -485,7 +529,6 @@ public class NamingSettings implements Setting {
         System.out.println(f.getName());
         try {
             List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
-            ArrayList<Replacement> reps = new ArrayList<>();
             for (int i = 0; i < lines.size(); i++) {
                 if (i == 0) {
                     continue;
@@ -497,8 +540,9 @@ public class NamingSettings implements Setting {
                 }
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
                 rep.replaceExact(btx, path);
-                if (replaceAll.get() && rep.global) {
-                    reps.add(rep);
+                //By adding only the first replacement of a word to the global replacement list, we only need to the global rules once.
+                if (replaceAll.get() && rep.global && !repMap.containsKey(rep.original)) {
+                    repMap.put(rep.original, rep);
                 }
             }
         } catch (Exception e) {
@@ -515,7 +559,7 @@ public class NamingSettings implements Setting {
 
         PathResolver res = new PathResolver(context);
         if (mode.equals("restore")) {
-            File manualCsvDir = new File("./renamingPresets/");
+            File manualCsvDir = new File(".\\renamingPresets\\");
             File origin;
             if (manualCsv.get() && manualCsvDir.exists()) {
                 origin = manualCsvDir;
@@ -523,7 +567,7 @@ public class NamingSettings implements Setting {
                 origin = new File(DecodeRandomizer.class.getResource("renamingPresets/").getFile());
             }
             List<File> presets = List.of(origin.listFiles());
-            presets.stream().forEach(p -> {
+            presets.forEach(p -> {
                 String pName = p.getName();
                 try {
                     Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
@@ -536,6 +580,41 @@ public class NamingSettings implements Setting {
             if (!replaceAll.get()) {
                 return;
             }
+
+            File startDir = new File(".\\working\\part0\\arcv\\");
+
+            //Shamelessly copied from the DecodeTools CSV export
+            Utils.listFiles(startDir).stream()
+                    //Everything that could contain BTX
+                    .filter(s -> s.getName().endsWith(".bin") || s.getName().endsWith(".pack") || s.getName().endsWith("_jp.res")).forEach(fA -> {
+
+                try (Access b = new FileAccess(fA)) {
+                    ResPayload f = ResPayload.craft(b);
+                    var elements = f.getElementsWithType(Payload.BTX);
+                    if (elements.isEmpty()) {
+                        return;
+                    }
+                    Path pathos = fA.toPath();
+                    Path pString = pathos.subpath(2, pathos.getNameCount());
+                    System.out.println("Replacing text in " + pString.toString());
+
+                    for (int i = 0; i < elements.size(); i++) {
+                        var payload = (BTXPayload) elements.get(i);
+                        String partialPath = pathos.toString() + "\\" + (i);
+                        payload.getEntries().forEach(bt -> {
+                            repMap.values().forEach(rep -> {
+                                rep.replaceDynamic(bt.getValue(), partialPath + ":" + bt.getKey());
+                            });
+
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            });
+
+            repMap.clear();
 
         } else {
             Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
