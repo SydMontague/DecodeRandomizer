@@ -9,6 +9,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.Path;
 import java.nio.file.Files;
 import java.io.File;
 import java.io.FileWriter;
@@ -18,6 +19,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
+import java.util.Comparator;
+import java.util.stream.Collector;
 
 import org.controlsfx.control.ToggleSwitch;
 
@@ -28,11 +31,13 @@ import net.digimonworld.decodetools.data.keepdata.GlobalKeepData;
 import net.digimonworld.decodetools.data.keepdata.LanguageKeep;
 import net.digimonworld.decodetools.res.kcap.NormalKCAP;
 import net.digimonworld.decodetools.res.payload.BTXPayload;
-
 import net.digimonworld.decodetools.core.DeleteDirectoryFileVisitor;
 import net.digimonworld.decodetools.core.Tuple;
 import net.digimonworld.decodetools.core.Utils;
 import net.digimonworld.decodetools.res.payload.BTXPayload.BTXEntry;
+import net.digimonworld.decodetools.res.ResPayload;
+import net.digimonworld.decodetools.res.ResPayload.Payload;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
@@ -45,15 +50,9 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.control.Accordion;
 import javafx.scene.layout.VBox;
 
-import java.nio.file.Path;
-
 import net.digimonworld.decode.randomizer.RandomizationContext;
 import net.digimonworld.decode.randomizer.utils.JavaFXUtils;
 import net.digimonworld.decode.randomizer.DecodeRandomizer;
-import net.digimonworld.decodetools.core.Access;
-import net.digimonworld.decodetools.core.FileAccess;
-import net.digimonworld.decodetools.res.ResPayload;
-import net.digimonworld.decodetools.res.ResPayload.Payload;
 
 public class NamingSettings implements Setting {
 
@@ -187,7 +186,7 @@ public class NamingSettings implements Setting {
 
             this.baseOffset = replacement.length() - original.length();
 
-            this.excludedTerms = List.of(rawExcludedTerms.split(","));
+            this.excludedTerms = List.of(rawExcludedTerms.split(",")).stream().map(p -> p.replaceAll("\\$", original)).collect(Collectors.toList());
             String[] pathos = rawDisabledPaths.split(",");
             for (String p : pathos) {
                 if (p.toLowerCase().equals("all")) {
@@ -216,7 +215,6 @@ public class NamingSettings implements Setting {
             if (text.length() == end) {
                 return 0;
             }
-
             return 0;
         }
 
@@ -276,13 +274,12 @@ public class NamingSettings implements Setting {
                 int start = current[0];
                 int end = current[1];
                 // If the start position is bigger than the end of our match we don't need to check the rest
-                if (start <= pos + (matchLength - 1)) {
+                if (start >= pos + (matchLength - 1)) {
                     break;
                 }
                 if (end >= pos && start < pos) {
                     return true;
                 }
-
             }
             return false;
         }
@@ -309,6 +306,12 @@ public class NamingSettings implements Setting {
 
         private boolean termExclusion(String text, int index) {
             for (String term : excludedTerms) {
+                if (term.equals("[]")) {
+                    if (!text.substring(Math.max(0, index - 2), Math.min(text.length(), index + 2)).matches(".*\b" + original + "\b.*")) {
+                        return true;
+                    }
+                    continue;
+                }
                 int exDex = text.indexOf(term);
                 if (exDex == -1) {
                     continue;
@@ -439,14 +442,12 @@ public class NamingSettings implements Setting {
 
                 File destFile = new File(".\\renamingPresets\\" + s.substring(3) + ".csv");
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(destFile, StandardCharsets.UTF_8))) {
-
                     writer.write("index;original;replace;excludeTerms;excludePaths\n");
                     String string = myList.stream()
                             .filter(str -> !skippable.contains(str.getValue()))
                             .map(str -> str.getKey().toString() + ';' + str.getValue() + ";" + str.getValue())
                             .collect(Collectors.joining(";;\n"))
                             + ";;";
-
                     writer.write(string);
                 } catch (IOException e) {
                 }
@@ -460,9 +461,9 @@ public class NamingSettings implements Setting {
 
         restoreBox.getChildren().addAll(
                 JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(renameEnabled)),
+                repAll,
                 manCs,
                 camel,
-                repAll,
                 blackCheck,
                 orgeCheck,
                 pickleCheck,
@@ -592,30 +593,31 @@ public class NamingSettings implements Setting {
 
             File startDir = new File(".\\working\\part0\\arcv\\");
 
+            //Sorting 
+            List<Replacement> sortedReps = repMap.values().stream().sorted(Comparator.comparing(v -> v.original.length())).collect(Collectors.toList());
+
             Utils.listFiles(startDir).stream()
                     //Everything that could contain BTX
-                    .filter(s
-                            -> //s.getName().endsWith(".pack") || 
-                            s.getName().endsWith("_jp.res")
+                    .filter(s -> s.getName().endsWith("_jp.res")
+                    || s.getName().endsWith(".pack")
                     ).forEach(fA -> {
 
                         try {
-                            Path pathos = fA.toPath();
-                            Path pString = pathos.subpath(2, pathos.getNameCount());
+                            Path longPath = fA.toPath();
+                            Path normalPath = longPath.subpath(2, longPath.getNameCount());
 
-                            var elements = res.resolveRaw(pString.toString()).getElementsWithType(Payload.BTX);
+                            var elements = res.resolveRaw(normalPath.toString()).getElementsWithType(Payload.BTX);
                             if (elements.isEmpty()) {
                                 return;
                             }
 
                             for (int i = 0; i < elements.size(); i++) {
                                 var payload = (BTXPayload) elements.get(i);
-                                String partialPath = pString.toString() + "\\" + (i);
+                                String partialPath = normalPath.toString() + "\\" + (i);
                                 payload.getEntries().forEach(bt -> {
-                                    repMap.values().forEach(rep -> {
+                                    sortedReps.forEach(rep -> {
                                         rep.replaceDynamic(bt.getValue(), partialPath + ":" + bt.getKey());
                                     });
-
                                 });
                             }
                         } catch (IOException e) {
@@ -625,6 +627,7 @@ public class NamingSettings implements Setting {
                     });
 
             repMap.clear();
+            replacementMap.clear();
 
         } else {
             Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
