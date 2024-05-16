@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
-import java.util.stream.Collector;
 
 import org.controlsfx.control.ToggleSwitch;
 
@@ -68,14 +67,14 @@ public class NamingSettings implements Setting {
     private final Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
     private final Map<String, BooleanProperty> randoMap = new HashMap<>();
     private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
-    private final List<String> priorities = List.of("DigimonNames.csv", "CardNames1.csv");
+    private final List<String> priorities = List.of("DigimonNames.csv", "CardNames1.csv", "FinisherNames.csv");
     private final Map<String, Replacement> repMap = new HashMap<>();
 
     private Accordion mainAc;
     /**
      * Visualization of a replacement map:
      *
-     * { "part0\arcv\Keep\LanguageKeep_jp.res\11:12" : [ [0,4,2], [8,13,-1] ] }
+     * { "part0\arcv\Keep\LanguageKeep_jp.res\11:12" : [ [0,4,2] , [8,13,-1] ] }
      *
      * Path schema works like this:
      *
@@ -89,10 +88,19 @@ public class NamingSettings implements Setting {
      * processed by a prior replacement. The offsets are used to map a position
      * of a match to its position in the unmodified line, making it possible to
      * exclude replacing matches at specific indices in a line based on the
-     * original file.
+     * unmodified contents.
      */
     public Map<String, ArrayList<int[]>> replacementMap = new HashMap<>();
 
+    /**
+     * DIGIMONMULTI designates names like WarGreymon or MetalGarurumon.
+     *
+     * All other DIGIMON names are simply other terms contained in a file
+     * designated as Digijmon name file.
+     *
+     * Everything else is classified as "GENERAL"
+     *
+     */
     protected enum TermType {
         GENERAL,
         DIGIMON,
@@ -101,12 +109,8 @@ public class NamingSettings implements Setting {
 
     private static TermType classifyTerm(String term, String path) {
         //These files contain digimon names
-        List<String> digiNamePaths = List.of(11, 27, 28).stream()
-                .map(n -> "part0\\arcv\\Keep\\LanguageKeep_jp.res\\" + n).collect(Collectors.toList());
-        if (!digiNamePaths.contains(path)) {
-            return TermType.GENERAL;
-        }
-        return term.matches(".*[a-z][A-Z].*") ? TermType.DIGIMONMULTI : TermType.DIGIMON;
+        List<String> digiNamePaths = List.of(11, 27, 28).stream().map(n -> "part0\\arcv\\Keep\\LanguageKeep_jp.res\\" + n).collect(Collectors.toList());
+        return digiNamePaths.contains(path) ? (term.matches(".*[a-z][A-Z].*") ? TermType.DIGIMONMULTI : TermType.DIGIMON) : TermType.GENERAL;
     }
 
     private static void btxSwitch(BTXEntry btxA, BTXEntry btxB) {
@@ -116,6 +120,10 @@ public class NamingSettings implements Setting {
         btxB.setString(a);
     }
 
+    /**
+     * This class does everything that has to do with replacing strings
+     * directly.
+     */
     private class Replacement {
 
         public String original;
@@ -138,13 +146,11 @@ public class NamingSettings implements Setting {
             public boolean valid = true;
 
             public PathPosition(String pathDescriptor) {
-                if (pathDescriptor.equals("")) {
-                    this.valid = false;
-                    return;
-                }
-
                 String[] splitter = pathDescriptor.split(":", -1);
                 this.path = splitter[0];
+                if (splitter.length == 0) {
+                    return;
+                }
                 this.line = Integer.parseInt(splitter[1]);
                 if (splitter.length == 1) {
                     this.col = -1;
@@ -160,7 +166,7 @@ public class NamingSettings implements Setting {
             this.original = original;
 
             TermType tType = classifyTerm(replacement, origin);
-
+            //Special modifications only apply to Digimon names
             if (!manualCsv.get() && tType != TermType.GENERAL) {
                 if (ogre.get() && replacement.equals("Orgemon")) {
                     this.replacement = "Ogremon";
@@ -175,7 +181,7 @@ public class NamingSettings implements Setting {
             } else {
                 this.replacement = replacement;
             }
-
+            //Separating multipart Digimon names Wikimon style
             if (tType == TermType.DIGIMONMULTI && !camelCase.get()) {
                 this.replacement = this.replacement.replaceAll("([a-z])([A-Z])", "$1 $2");
             }
@@ -539,6 +545,9 @@ public class NamingSettings implements Setting {
             this.keepMap.put("CardSetNames", "30");
         }
 
+        /**
+         * Returns a file directly from the RandomizationContext
+         */
         public ResPayload resolveRaw(String finalPath) throws IOException {
             try {
                 return context.getFile(finalPath).get();
@@ -547,6 +556,9 @@ public class NamingSettings implements Setting {
             }
         }
 
+        /**
+         * Resolves a path directly into BTX payloads while applying shortcuts
+         */
         public Tuple<String, BTXPayload> resolve(String path) throws ParseException {
             ArrayList<String> frag = new ArrayList<>(
                     List.of((keepMap.containsKey(path) ? ("keep-" + keepMap.get(path)) : path).split("-")));
@@ -566,6 +578,10 @@ public class NamingSettings implements Setting {
         }
     }
 
+    /**
+     * Replacing the contents of a BTX file based on a CSV that contains direct
+     * mappings to the BTX entry IDs
+     */
     private void targetedBtxReplacement(BTXPayload btx, File f, String path) {
         System.out.println(f.getName());
         try {
@@ -581,7 +597,7 @@ public class NamingSettings implements Setting {
                 }
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
                 rep.replaceExact(btx, path);
-                //By adding only the first replacement of a word to the global replacement list, we only need to the global rules once.
+                //By adding only the first replacement of a word to the global replacement list, we only need to define the global rules once.
                 if (replaceAll.get() && rep.global && !repMap.containsKey(rep.original)) {
                     repMap.put(rep.original, rep);
                 }
@@ -607,8 +623,7 @@ public class NamingSettings implements Setting {
             } else {
                 origin = new File(DecodeRandomizer.class.getResource("renamingPresets/").getFile());
             }
-            List<File> presets = List.of(origin.listFiles());
-            presets.stream().forEach(p -> {
+            List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? priorities.size() - priorities.indexOf(f.getName()) : -1)).forEach(p -> {
                 String pName = p.getName();
                 try {
                     Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
@@ -699,8 +714,7 @@ public class NamingSettings implements Setting {
         map.put("pickle", pickle.get());
         map.put("ogre", ogre.get());
         map.put("blackPrefix", blackPrefix.get());
-        map.put("randomChecked", randoMap.entrySet().stream().filter(a -> a.getValue().get()).map(Map.Entry::getKey)
-                .collect(Collectors.toList()));
+        map.put("randomChecked", randoMap.entrySet().stream().filter(a -> a.getValue().get()).map(Map.Entry::getKey).collect(Collectors.toList()));
         return map;
     }
 
@@ -710,8 +724,7 @@ public class NamingSettings implements Setting {
             return;
         }
         YamlSequence list = map.yamlSequence("randomChecked");
-        List<String> activeList = list == null ? new ArrayList<>()
-                : list.values().stream().map(a -> a.toString()).collect(Collectors.toList());
+        List<String> activeList = list == null ? new ArrayList<>() : list.values().stream().map(a -> a.toString()).collect(Collectors.toList());
         randoMap.forEach((a, b) -> b.set(activeList.contains(a)));
         renameEnabled.set(Boolean.parseBoolean(map.string("enabled")));
     }
