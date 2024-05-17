@@ -201,6 +201,7 @@ public class NamingSettings implements Setting {
             if (tType == TermType.DIGIMONMULTI && !camelCase.get()) {
                 this.replacement = this.replacement.replaceAll("([a-z])([A-Z])", "$1 $2");
             }
+            this.replacement = this.replacement.replaceAll("\\n", "\n");
 
             this.diffS = replacement.endsWith("s") != original.endsWith("s");
 
@@ -303,7 +304,7 @@ public class NamingSettings implements Setting {
             matchStart = matchStart + artOff;
             matchEnd = matchEnd + apOff;
             int finalOffset = baseOffset + artOff + apOff;
-            System.out.println(path + " | " + origText.substring(matchStart, matchEnd) + " -> " + btx.getString().substring(matchStart, matchEnd + finalOffset));
+            System.out.println(path + " | " + origText.substring(matchStart, matchEnd).replaceAll("\n", "\\\\n") + " -> " + btx.getString().substring(matchStart, matchEnd + finalOffset).replaceAll("\n", "\\\\n"));
 
             insertRepData(path, matchStart, matchEnd, finalOffset);
         }
@@ -395,7 +396,7 @@ public class NamingSettings implements Setting {
                     return true;
                 }
             }
-            return enabledPaths.stream().anyMatch(p -> !p.matches(currentPath));
+            return !enabledPaths.isEmpty() && !enabledPaths.stream().anyMatch(p -> p.matches(currentPath));
         }
 
         /**
@@ -404,7 +405,7 @@ public class NamingSettings implements Setting {
          * in the replacing string
          */
         private Tuple<Integer, String> adjustForNewlines(String text) {
-            Matcher spaceMatch = Pattern.compile(original.replaceAll(" ", "(\\s)")).matcher(text);
+            Matcher spaceMatch = Pattern.compile(original.replaceAll(" ", "(\\\\s)")).matcher(text);
             if (!spaceMatch.find()) {
                 return new Tuple(-1, replacement);
             } else {
