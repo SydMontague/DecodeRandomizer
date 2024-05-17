@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
 import java.util.regex.Matcher;
@@ -214,12 +215,13 @@ public class NamingSettings implements Setting {
             this.excludedTerms = List.of(rawExcludedTerms.split(",")).stream().map(p -> p.replaceAll("\\$", original)).collect(Collectors.toList());
             String[] pathos = rawDisabledPaths.split(",");
             for (String p : pathos) {
-                if (p.toLowerCase().equals("all")) {
+                String tp = p.trim();
+                if (tp.toLowerCase().equals("all")) {
                     this.global = false;
-                } else if (!p.startsWith("!")) {
-                    this.enabledPaths.add(new PathPosition(p.substring(1)));
-                } else if (!p.equals("")) {
-                    this.disabledPaths.add(new PathPosition(p));
+                } else if (tp.startsWith("!")) {
+                    this.enabledPaths.add(new PathPosition(tp.substring(1)));
+                } else if (!tp.equals("")) {
+                    this.disabledPaths.add(new PathPosition(tp));
                 }
             }
         }
@@ -393,7 +395,7 @@ public class NamingSettings implements Setting {
                     return true;
                 }
             }
-            return !enabledPaths.stream().anyMatch(p -> p.matches(currentPath));
+            return enabledPaths.stream().anyMatch(p -> !p.matches(currentPath));
         }
 
         /**
@@ -706,10 +708,11 @@ public class NamingSettings implements Setting {
             } else {
                 origin = new File(DecodeRandomizer.class.getResource("renamingPresets/").getFile());
             }
-            List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? priorities.size() - priorities.indexOf(f.getName()) : -1)).forEach(p -> {
+            List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.indexOf(f.getName()))).sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? -1 : 1)).forEach(p -> {
                 String pName = p.getName();
                 if (pName.equals("_general.csv")) {
                     if (replaceAll.get()) {
+                        System.out.println("Parsing general Replacements");
                         parseReplacements(p, pName);
                     }
                     return;
