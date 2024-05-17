@@ -140,19 +140,18 @@ public class NamingSettings implements Setting {
 
         private class PathPosition {
 
-            public int line = 0;
+            public int line = -1;
             public int col = -1;
             public String path = "";
-            public boolean valid = true;
 
             public PathPosition(String pathDescriptor) {
                 String[] splitter = pathDescriptor.split(":", -1);
                 this.path = splitter[0];
-                if (splitter.length == 0) {
+                if (splitter.length == 1) {
                     return;
                 }
                 this.line = Integer.parseInt(splitter[1]);
-                if (splitter.length == 1) {
+                if (splitter.length == 2) {
                     this.col = -1;
                 } else {
                     this.col = Integer.parseInt(splitter[2]);
@@ -178,6 +177,7 @@ public class NamingSettings implements Setting {
                 } else {
                     this.replacement = replacement;
                 }
+
             } else {
                 this.replacement = replacement;
             }
@@ -362,8 +362,11 @@ public class NamingSettings implements Setting {
         }
 
         private boolean pathExclusion(String path, int index) {
+            String[] lineSplit = path.split(":");
+            String file = lineSplit[0];
+            int line = lineSplit.length == 2 ? Integer.parseInt(lineSplit[1]) : -1;
             for (PathPosition p : disabledPaths) {
-                if (p.path.equals(path) && (p.col == -1 || p.col == index)) {
+                if (p.path.equals(file) && (p.line == -1 || line == p.line) && (p.col == -1 || p.col == index)) {
                     return true;
                 }
             }
@@ -470,9 +473,7 @@ public class NamingSettings implements Setting {
                 ArrayList<Tuple<Integer, String>> myList = new ArrayList<>();
                 try {
                     BTXPayload btx = (BTXPayload) language.getClass().getMethod(s).invoke(language);
-                    btx.getEntries().stream()
-                            .forEach(e -> myList
-                            .add(new Tuple<Integer, String>(e.getKey(), e.getValue().getString())));
+                    btx.getEntries().stream().forEach(e -> myList.add(new Tuple<Integer, String>(e.getKey(), e.getValue().getString())));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -571,6 +572,7 @@ public class NamingSettings implements Setting {
                 if (frag.get(frag.size() - 1).equals("keep")) {
                     pk = (NormalKCAP) pk.get(0);
                 }
+
                 return new Tuple<>(finalPath + "\\" + btxIndex, (BTXPayload) pk.get(btxIndex));
             } catch (NoSuchElementException exc) {
                 throw new ParseException("csv not correctly mapped", 0);
@@ -655,20 +657,17 @@ public class NamingSettings implements Setting {
                             if (elements.isEmpty()) {
                                 return;
                             }
+
                             for (int i = 0; i < elements.size(); i++) {
                                 var payload = (BTXPayload) elements.get(i);
                                 String partialPath = normalPath.toString() + "\\" + (i);
-                                payload.getEntries().forEach(bt -> {
-                                    fileEntries.add(new Tuple(partialPath + ":" + bt.getKey(), bt.getValue()));
-                                });
+                                payload.getEntries().forEach(bt -> fileEntries.add(new Tuple(partialPath + ":" + bt.getKey(), bt.getValue())));
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
-            sortedReps.forEach(rep -> {
-                fileEntries.forEach(t -> rep.replaceDynamic(t.getValue(), t.getKey()));
-            });
+            sortedReps.forEach(rep -> fileEntries.forEach(t -> rep.replaceDynamic(t.getValue(), t.getKey())));
 
             repMap.clear();
             replacementMap.clear();
