@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.PKCS12Attribute;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
@@ -64,7 +65,6 @@ public class NamingSettings implements Setting {
     private final BooleanProperty pickle = new SimpleBooleanProperty(false);
     private final BooleanProperty ogre = new SimpleBooleanProperty(false);
     private final BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
-    private final Map<Integer, BooleanProperty> propertyMap = new HashMap<>();
     private final Map<String, BooleanProperty> randoMap = new HashMap<>();
     private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
     private final List<String> priorities = List.of("DigimonNames.csv", "CardNames1.csv", "FinisherNames.csv");
@@ -142,14 +142,20 @@ public class NamingSettings implements Setting {
 
             public int line = -1;
             public int col = -1;
+            public boolean wildcard = false;
             public String path = "";
 
             public PathPosition(String pathDescriptor) {
-                String[] splitter = pathDescriptor.split(":", -1);
+                String[] splitter = pathDescriptor.trim().split(":", -1);
                 this.path = splitter[0];
+                if (this.path.startsWith("*")) {
+                    this.wildcard = true;
+                    this.path = this.path.substring(1);
+                }
                 if (splitter.length == 1) {
                     return;
                 }
+
                 this.line = Integer.parseInt(splitter[1]);
                 if (splitter.length == 2) {
                     this.col = -1;
@@ -157,6 +163,12 @@ public class NamingSettings implements Setting {
                     this.col = Integer.parseInt(splitter[2]);
                 }
 
+            }
+
+            public boolean matches(PathPosition p2) {
+                return (this.wildcard ? p2.path.endsWith(path) : p2.path.equals(path))
+                        && (line == -1 || p2.line == line)
+                        && (col == -1 || p2.col == col);
             }
         }
 
@@ -187,7 +199,10 @@ public class NamingSettings implements Setting {
             }
 
             this.diffS = replacement.endsWith("s") != original.endsWith("s");
-            this.diffArt = vow.contains(this.replacement.substring(0, 1)) != vow.contains(this.original.substring(0, 1));
+
+            this.diffArt = (original.length() != 0 && replacement.length() != 0)
+                    ? vow.contains(this.replacement.substring(0, 1)) != vow.contains(this.original.substring(0, 1))
+                    : false;
 
             this.matchLength = original.length();
 
@@ -362,11 +377,10 @@ public class NamingSettings implements Setting {
         }
 
         private boolean pathExclusion(String path, int index) {
-            String[] lineSplit = path.split(":");
-            String file = lineSplit[0];
-            int line = lineSplit.length == 2 ? Integer.parseInt(lineSplit[1]) : -1;
+            PathPosition currentPath = new PathPosition(path + ':' + index);
             for (PathPosition p : disabledPaths) {
-                if (p.path.equals(file) && (p.line == -1 || line == p.line) && (p.col == -1 || p.col == index)) {
+                if (p.matches(currentPath)) {
+                    System.out.println("skipping " + path + " for " + original);
                     return true;
                 }
             }
@@ -586,6 +600,11 @@ public class NamingSettings implements Setting {
      */
     private void targetedBtxReplacement(BTXPayload btx, File f, String path) {
         System.out.println(f.getName());
+        parseReplacements(f, path).forEach(r -> r.replaceExact(btx, path));
+    }
+
+    private List<Replacement> parseReplacements(File f, String path) {
+        List<Replacement> l = List.of();
         try {
             List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
             for (int i = 0; i < lines.size(); i++) {
@@ -598,15 +617,15 @@ public class NamingSettings implements Setting {
                     continue;
                 }
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
-                rep.replaceExact(btx, path);
                 //By adding only the first replacement of a word to the global replacement list, we only need to define the global rules once.
                 if (replaceAll.get() && rep.global && !repMap.containsKey(rep.original)) {
                     repMap.put(rep.original, rep);
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
+        return l;
     }
 
     @Override
@@ -627,6 +646,10 @@ public class NamingSettings implements Setting {
             }
             List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? priorities.size() - priorities.indexOf(f.getName()) : -1)).forEach(p -> {
                 String pName = p.getName();
+                if (pName.equals("_general.csv")) {
+                    parseReplacements(p, pName);
+                    return;
+                }
                 try {
                     Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
                     targetedBtxReplacement(foundBtx.getValue(), p, foundBtx.getKey());
