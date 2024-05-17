@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.controlsfx.control.ToggleSwitch;
 
@@ -47,6 +49,7 @@ import javafx.beans.binding.When;
 import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.skin.NestedTableColumnHeader;
 import javafx.scene.layout.VBox;
 
 import net.digimonworld.decode.randomizer.RandomizationContext;
@@ -279,13 +282,15 @@ public class NamingSettings implements Setting {
 
         public void replaceDynamic(BTXEntry btx, String path) {
             String origText = btx.getString();
-            int matchStart = findInText(origText, path);
+            Tuple<Integer, String> match = findInText(origText, path);
+            int matchStart = match.getKey();
             if (matchStart == -1) {
                 return;
             }
+            String rep = match.getValue();
 
             int matchEnd = matchStart + matchLength;
-            btx.setString(origText.substring(0, matchStart) + replacement + origText.substring(matchEnd));
+            btx.setString(origText.substring(0, matchStart) + rep + origText.substring(matchEnd));
 
             int artOff = correctArticle(btx, matchStart);
             int apOff = correctApostrophe(btx, matchEnd);
@@ -387,10 +392,62 @@ public class NamingSettings implements Setting {
             return false;
         }
 
-        private int findInText(String text, String path) {
+        /**
+         * If a multipart term was broken up by a newline, we match its
+         * components and attempt to reinsert a space at a comparable position
+         * in the replacing string
+         */
+        private Tuple<Integer, String> adjustForNewlines(String text) {
+            Matcher spaceMatch = Pattern.compile(original.replaceAll(" ", "(\\s)")).matcher(text);
+            if (!spaceMatch.find()) {
+                return new Tuple(-1, replacement);
+            } else {
+                int first = spaceMatch.start();
+                if (!replacement.contains(" ")) {
+                    return new Tuple(first, replacement + "\n");
+                }
+                String[] repSplit = replacement.split(" ");
+                if (repSplit.length == 2) {
+                    return new Tuple(first, repSplit[0] + "\n" + repSplit[1]);
+                }
+                int spaceLoc = 0;
+                int spaceDex = 0;
+                for (int i = 1; i < spaceMatch.groupCount(); i++) {
+                    if (spaceMatch.group(i).equals("\n")) {
+                        spaceLoc = i;
+                        break;
+                    }
+                }
+                String[] splits = original.split(" ");
+                for (int i = 0; i < splits.length; i++) {
+                    String s = splits[i];
+                    spaceDex += s.length() + 1;
+                    if (i == spaceLoc) {
+                        break;
+                    }
+                }
+                if (spaceDex >= replacement.length()) {
+                    return new Tuple(first, replacement + "\n");
+                }
+
+                int firstBefore = replacement.substring(0, spaceDex).lastIndexOf(" ");
+                int firstAfter = replacement.substring(spaceDex).indexOf(" ");
+                if (firstAfter == -1 && firstBefore == -1) {
+                    return new Tuple(first, replacement + "\n");
+                }
+                int finalSpace = firstAfter == -1 ? firstBefore : firstBefore == -1 ? firstAfter : Math.min(firstAfter, firstBefore) == firstBefore ? firstBefore : firstAfter;
+                return new Tuple(first, replacement.substring(0, finalSpace) + "\n" + replacement.substring(finalSpace + 1));
+            }
+
+        }
+
+        private Tuple<Integer, String> findInText(String text, String path) {
             int idx = text.indexOf(original);
+            if (idx == -1 && original.contains(" ") && text.contains("\n")) {
+                return adjustForNewlines(text);
+            }
             //If any of the exclusion 
-            return (idx == -1 || termExclusion(text, idx) || pathExclusion(path, idx) || isOverlapping(path, idx)) ? -1 : idx;
+            return new Tuple((idx == -1 || termExclusion(text, idx) || pathExclusion(path, idx) || isOverlapping(path, idx)) ? -1 : idx, replacement);
         }
 
     }

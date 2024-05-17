@@ -11,12 +11,12 @@ index;original;replace;excludeTerms;excludePaths
 9;BRN;BRN;;
 10;Digimon;Digimon;;
 11;Form;Form;;
-12;Fresh;Baby I;$ly;*\LanguageKeep_jp.res\14:4227
+12;Fresh;Baby I;;
 13;In-Training;Baby II;;
 14;Rookie;Child;;
-15;Champion;Adult;Digimon\n$,Colosseum $,Tenkaichi $,You're the $;
-16;Ultimate;Perfect;$ Piece,$ X Antibody,$Brachiomon,$Brachimon,$ Stream,$ body,$ victory,$ Sacrifice,$ Ouryuken,$ Poop Hell,$ Weapon,$ Cup,$ Herbal,$ Slicer,$ Enemy,$ Thunder,$\nBlast,$ Quake;
-17;Mega;Ultimate;$ Meat,$ Blaster,$seadramon,$dramon,$Seadramon,$ Burst,$battle,$ly;
+15;Champion;Adult;;
+16;Ultimate;Perfect;;
+17;Mega;Ultimate;;
 18;Armor;Armor;;
 19;Special;Special;;
 20;Attribute;Attribute;;
