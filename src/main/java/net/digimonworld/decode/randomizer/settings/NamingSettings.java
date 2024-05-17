@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.PKCS12Attribute;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
@@ -67,7 +66,7 @@ public class NamingSettings implements Setting {
     private final BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
     private final Map<String, BooleanProperty> randoMap = new HashMap<>();
     private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
-    private final List<String> priorities = List.of("DigimonNames.csv", "CardNames1.csv", "FinisherNames.csv");
+    private final List<String> priorities = List.of("_general.csv", "DigimonNames.csv", "CardNames1.csv", "FinisherNames.csv");
     private final Map<String, Replacement> repMap = new HashMap<>();
 
     private Accordion mainAc;
@@ -235,12 +234,13 @@ public class NamingSettings implements Setting {
                 return 0;
             }
             String text = btx.getString();
-            if (text.length() == end) {
+            int max = text.length();
+            if (max == end) {
                 return 0;
             }
             if (replacement.endsWith("s")) {
                 // remove s after apostrophe
-                if (text.substring(end, Math.min(end + 2, text.length())).equals("'s")) {
+                if (text.substring(Math.min(end, max), Math.min(end + 2, max)).equals("'s")) {
                     btx.setString(text.substring(0, end + 1) + text.substring(end + 2));
                     return -1;
                 } else {
@@ -248,7 +248,7 @@ public class NamingSettings implements Setting {
                 }
             } else {
                 // add s after apostrophe
-                if (text.substring(end, Math.min(end + 1, text.length())).equals("'")) {
+                if (text.substring(Math.min(end, max), Math.min(end + 1, max)).equals("'")) {
                     btx.setString(text.substring(0, end + 1) + "s" + text.substring(end + 1));
                     return 1;
                 }
@@ -599,12 +599,12 @@ public class NamingSettings implements Setting {
      * mappings to the BTX entry IDs
      */
     private void targetedBtxReplacement(BTXPayload btx, File f, String path) {
-        System.out.println(f.getName());
+        System.out.println(f.getName() + " -> " + path);
         parseReplacements(f, path).forEach(r -> r.replaceExact(btx, path));
     }
 
-    private List<Replacement> parseReplacements(File f, String path) {
-        List<Replacement> l = List.of();
+    private ArrayList<Replacement> parseReplacements(File f, String path) {
+        ArrayList<Replacement> rList = new ArrayList<>();
         try {
             List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
             for (int i = 0; i < lines.size(); i++) {
@@ -617,6 +617,7 @@ public class NamingSettings implements Setting {
                     continue;
                 }
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
+                rList.add(rep);
                 //By adding only the first replacement of a word to the global replacement list, we only need to define the global rules once.
                 if (replaceAll.get() && rep.global && !repMap.containsKey(rep.original)) {
                     repMap.put(rep.original, rep);
@@ -625,7 +626,7 @@ public class NamingSettings implements Setting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return l;
+        return rList;
     }
 
     @Override
