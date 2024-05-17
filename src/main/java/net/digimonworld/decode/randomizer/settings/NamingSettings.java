@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +50,6 @@ import javafx.beans.binding.When;
 import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Accordion;
-import javafx.scene.control.skin.NestedTableColumnHeader;
 import javafx.scene.layout.VBox;
 
 import net.digimonworld.decode.randomizer.RandomizationContext;
@@ -132,6 +132,7 @@ public class NamingSettings implements Setting {
         public String replacement;
         private final List<String> excludedTerms;
         private final ArrayList<PathPosition> disabledPaths = new ArrayList();
+        private final ArrayList<PathPosition> enabledPaths = new ArrayList();
         private final int matchLength;
         private int index = -1;
         private final boolean diffS;
@@ -215,6 +216,8 @@ public class NamingSettings implements Setting {
             for (String p : pathos) {
                 if (p.toLowerCase().equals("all")) {
                     this.global = false;
+                } else if (!p.startsWith("!")) {
+                    this.enabledPaths.add(new PathPosition(p.substring(1)));
                 } else if (!p.equals("")) {
                     this.disabledPaths.add(new PathPosition(p));
                 }
@@ -364,6 +367,7 @@ public class NamingSettings implements Setting {
         private boolean termExclusion(String text, int index) {
             for (String term : excludedTerms) {
                 if (term.equals("[]")) {
+                    //Checking for word boundaries
                     if (!text.substring(Math.max(0, index - 2), Math.min(text.length(), index + 2)).matches(".*\b" + original + "\b.*")) {
                         return true;
                     }
@@ -389,7 +393,7 @@ public class NamingSettings implements Setting {
                     return true;
                 }
             }
-            return false;
+            return !enabledPaths.stream().anyMatch(p -> p.matches(currentPath));
         }
 
         /**
@@ -545,7 +549,7 @@ public class NamingSettings implements Setting {
                 try {
                     BTXPayload btx = (BTXPayload) language.getClass().getMethod(s).invoke(language);
                     btx.getEntries().stream().forEach(e -> myList.add(new Tuple<Integer, String>(e.getKey(), e.getValue().getString())));
-                } catch (Exception e) {
+                } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
 
@@ -705,7 +709,9 @@ public class NamingSettings implements Setting {
             List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? priorities.size() - priorities.indexOf(f.getName()) : -1)).forEach(p -> {
                 String pName = p.getName();
                 if (pName.equals("_general.csv")) {
-                    parseReplacements(p, pName);
+                    if (replaceAll.get()) {
+                        parseReplacements(p, pName);
+                    }
                     return;
                 }
                 try {
@@ -806,6 +812,13 @@ public class NamingSettings implements Setting {
         YamlSequence list = map.yamlSequence("randomChecked");
         List<String> activeList = list == null ? new ArrayList<>() : list.values().stream().map(a -> a.toString()).collect(Collectors.toList());
         randoMap.forEach((a, b) -> b.set(activeList.contains(a)));
-        renameEnabled.set(Boolean.parseBoolean(map.string("enabled")));
+        renameEnabled.set(Boolean.parseBoolean(map.string("renameEnabled")));
+        randomizeEnabled.set(Boolean.parseBoolean(map.string("randomizeEnabled")));
+        camelCase.set(Boolean.parseBoolean(map.string("camelCase")));
+        manualCsv.set(Boolean.parseBoolean(map.string("manualCsv")));
+        replaceAll.set(Boolean.parseBoolean(map.string("replaceAll")));
+        pickle.set(Boolean.parseBoolean(map.string("pickle")));
+        ogre.set(Boolean.parseBoolean(map.string("ogre")));
+        blackPrefix.set(Boolean.parseBoolean(map.string("blackPrefix")));
     }
 }
