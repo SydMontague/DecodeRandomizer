@@ -124,10 +124,10 @@ public class NamingSettings implements Setting {
     }
 
     /**
-     * This class does everything that has to do with replacing strings
-     * directly.
+     * This class does everything that has to do with directly replacing
+     * strings.
      */
-    private class Replacement {
+    private final class Replacement {
 
         public String original;
         public String replacement;
@@ -136,13 +136,24 @@ public class NamingSettings implements Setting {
         private final ArrayList<PathPosition> enabledPaths = new ArrayList();
         private final int matchLength;
         private int index = -1;
+        /**
+         * Does this replacement need to check for apostrophe correction?
+         */
         private final boolean diffS;
+        /**
+         * Does this replacement need to check for indefinite article
+         * correction?
+         */
         private final boolean diffArt;
         private final int baseOffset;
         public boolean global = true;
         private final List<String> vow = List.of("A", "E", "I", "O", "U", "Ü", "Ö", "Ä");
 
-        private class PathPosition {
+        /**
+         * Utility class used to compare references to text positions supporting
+         * wildcards for lines and columns.
+         */
+        private final class PathPosition {
 
             public int line = -1;
             public int col = -1;
@@ -169,6 +180,11 @@ public class NamingSettings implements Setting {
 
             }
 
+            /**
+             * Check if two paths match. If wildcards are used, the second path
+             * has to be the shorter one which currently is always the case
+             * since generated paths are always full length.
+             */
             public boolean matches(PathPosition p2) {
                 return (this.wildcard ? p2.path.endsWith(path) : p2.path.equals(path))
                         && (line == -1 || p2.line == line)
@@ -227,17 +243,10 @@ public class NamingSettings implements Setting {
             }
         }
 
-        public void replaceExact(BTXPayload btx, String path) {
-            BTXEntry entry = btx.getEntryById(index).get();
-            if (!original.equals(replacement)) {
-                entry.setString(replacement);
-                System.out.println(original + " -> " + replacement);
-            }
-            // Exact replacements block any future replacements on this particular line.
-            insertRepData(path + ":" + index, -1, Integer.MAX_VALUE, 0);
-        }
-
-        //Fixing mistakes like Davis' -> Daisuke' etc
+        /**
+         * Fixing mistakes like Davis' -> Daisuke' etc, returning the
+         * modification to the offset value.
+         */
         private int correctApostrophe(BTXEntry btx, int end) {
             if (!diffS) {
                 return 0;
@@ -265,25 +274,48 @@ public class NamingSettings implements Setting {
             }
         }
 
-        //Fixing mistakes like "a Champion" -> "a AAdult"
+        /**
+         * Fixing mistakes like "a Champion" -> "a Adult", returns the
+         * modification to the offset value.
+         *
+         * Cannot be 100% accurate because of arbitrary "consonantal properties"
+         * of vowels in some words.
+         */
         private int correctArticle(BTXEntry btx, int start) {
             if (!diffArt || start == 0) {
                 return 0;
             }
             String text = btx.getString();
             if (vow.contains(replacement.substring(0, 1))) {
+                //Adding the missing n
                 if (text.substring(Math.max(0, start - 3), start).matches(".*\\b[aA]\\b.*")) {
                     btx.setString(text.substring(0, start - 1) + "n" + text.substring(start - 1));
                     return 1;
                 }
                 return 0;
             } else {
+                //Removing the n
                 if (text.substring(Math.max(0, start - 4), start).matches(".*\\b[aA]n\\b.*")) {
                     btx.setString(text.substring(0, start - 2) + text.substring(start - 1));
                     return -1;
                 }
                 return 0;
             }
+        }
+
+        /**
+         * Replace an entire line for a specific index of a BTX.
+         *
+         * This method does not check what the line currently contains.
+         */
+        public void replaceExact(BTXPayload btx, String path) {
+            BTXEntry entry = btx.getEntryById(index).get();
+            if (!original.equals(replacement)) {
+                entry.setString(replacement);
+                System.out.println(original + " -> " + replacement);
+            }
+            // Exact replacements block any future replacements on this particular line.
+            insertRepData(path + ":" + index, -1, Integer.MAX_VALUE, 0);
         }
 
         public void replaceDynamic(BTXEntry btx, String path) {
@@ -307,6 +339,10 @@ public class NamingSettings implements Setting {
             insertRepData(path, matchStart, matchEnd, finalOffset);
         }
 
+        /**
+         * Checks where the position of the current match would have been in the
+         * unmodified text
+         */
         private int realPosition(String path, int index) {
             ArrayList<int[]> repls = replacementMap.get(path);
             if (repls == null) {
@@ -324,6 +360,10 @@ public class NamingSettings implements Setting {
             return index + finalOffset;
         }
 
+        /**
+         * Checks if the current match overlaps a text range that has already
+         * been replaced.
+         */
         private boolean isOverlapping(String path, int index) {
             ArrayList<int[]> repls = replacementMap.get(path);
             if (repls == null) {
@@ -339,6 +379,7 @@ public class NamingSettings implements Setting {
                     break;
                 }
                 if (end >= pos && start < pos) {
+                    // Oh no, an overlap!
                     return true;
                 }
             }
@@ -396,7 +437,7 @@ public class NamingSettings implements Setting {
         }
 
         private boolean pathExclusion(String path, int index) {
-            PathPosition currentPath = new PathPosition(path + ':' + index);
+            PathPosition currentPath = new PathPosition(path + ':' + realPosition(path, index));
             for (PathPosition p : disabledPaths) {
                 if (p.matches(currentPath)) {
                     System.out.println("skipping " + path + " for " + original);
@@ -466,6 +507,9 @@ public class NamingSettings implements Setting {
 
     }
 
+    /**
+     * Exports all methods for name lists from the LanguageKeep
+     */
     private ArrayList<String> getNameListMethods(LanguageKeep lang) {
         ArrayList<String> methodList = new ArrayList<>();
         Method[] methods = lang.getClass().getMethods();
@@ -478,17 +522,16 @@ public class NamingSettings implements Setting {
         return methodList;
     }
 
-    private static boolean clearExportDir(File dir) {
+    private static void clearExportDir(File dir) {
         try {
             if (dir.exists()) {
                 Files.walkFileTree(dir.toPath(), new DeleteDirectoryFileVisitor());
             }
         } catch (IOException exc) {
             exc.printStackTrace();
-            return false;
+            return;
         }
         dir.mkdir();
-        return true;
     }
 
     private static EventHandler<ActionEvent> buildHandler(String resourcePath, File targetDir) {
@@ -709,6 +752,7 @@ public class NamingSettings implements Setting {
 
         PathResolver res = new PathResolver(context);
         if (mode.equals("restore")) {
+            // Main logic for dub -> sub conversion
             File manualCsvDir = new File(".\\renamingPresets\\");
             File origin;
             if (manualCsv.get() && manualCsvDir.exists()) {
@@ -739,7 +783,7 @@ public class NamingSettings implements Setting {
 
             File startDir = new File(".\\working\\part0\\arcv\\");
 
-            //Sorting 
+            //Sorting our replacements by length to avoid lobger replacements getting overriding by prior partial matches.
             List<Replacement> sortedReps = repMap.values().stream().sorted(Comparator.comparing(v -> v.original.length() * -1)).collect(Collectors.toList());
             ArrayList<Tuple<String, BTXEntry>> fileEntries = new ArrayList();
             Utils.listFiles(startDir).stream()
@@ -752,9 +796,6 @@ public class NamingSettings implements Setting {
                             Path normalPath = longPath.subpath(2, longPath.getNameCount());
 
                             var elements = res.resolveRaw(normalPath.toString()).getElementsWithType(Payload.BTX);
-                            if (elements.isEmpty()) {
-                                return;
-                            }
 
                             for (int i = 0; i < elements.size(); i++) {
                                 var payload = (BTXPayload) elements.get(i);
@@ -771,6 +812,7 @@ public class NamingSettings implements Setting {
             replacementMap.clear();
 
         } else {
+            //Randomizing different lists of strings
             Random rand = new Random(context.getInitialSeed() * "ShuffleTerms".hashCode());
             randoTypes.stream().filter(k -> randoMap.get(k).get()).map(s -> s.replaceAll(" ", "")).forEach(name -> {
                 try {
