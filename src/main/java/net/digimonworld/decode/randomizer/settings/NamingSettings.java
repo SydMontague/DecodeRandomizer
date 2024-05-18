@@ -272,13 +272,13 @@ public class NamingSettings implements Setting {
             }
             String text = btx.getString();
             if (vow.contains(replacement.substring(0, 1))) {
-                if (text.substring(Math.max(0, start - 3), start).matches(".*\\ba\\b.*")) {
+                if (text.substring(Math.max(0, start - 3), start).matches(".*\\b[aA]\\b.*")) {
                     btx.setString(text.substring(0, start - 1) + "n" + text.substring(start - 1));
                     return 1;
                 }
                 return 0;
             } else {
-                if (text.substring(Math.max(0, start - 4), start).matches(".*\\ban\\b.*")) {
+                if (text.substring(Math.max(0, start - 4), start).matches(".*\\b[aA]n\\b.*")) {
                     btx.setString(text.substring(0, start - 2) + text.substring(start - 1));
                     return -1;
                 }
@@ -376,9 +376,18 @@ public class NamingSettings implements Setting {
                 }
                 int exDex = text.indexOf(term);
                 if (exDex == -1) {
-                    continue;
+                    if (text.contains("\n")) {
+                        Matcher mt = Pattern.compile(term.replaceAll(" ", "(\\\\s)")).matcher(text);
+                        if (mt.find()) {
+                            exDex = mt.start();
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
                 }
-                int subDex = term.indexOf(original);
+                int subDex = term.replaceAll("\n", " ").indexOf(original);
                 if (exDex + subDex == index) {
                     return true;
                 }
