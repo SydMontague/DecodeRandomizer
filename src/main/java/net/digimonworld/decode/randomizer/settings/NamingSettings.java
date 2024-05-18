@@ -19,7 +19,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Comparator;
 import java.util.regex.Matcher;
@@ -265,20 +264,20 @@ public class NamingSettings implements Setting {
             }
         }
 
-        //Fixing mistakes like "a Scorpiomon" -> "a Anomalicarimon"
+        //Fixing mistakes like "a Champion" -> "a AAdult"
         private int correctArticle(BTXEntry btx, int start) {
             if (!diffArt || start == 0) {
                 return 0;
             }
             String text = btx.getString();
             if (vow.contains(replacement.substring(0, 1))) {
-                if (text.substring(Math.max(0, start - 3), start).matches(".*\ba\b.*")) {
+                if (text.substring(Math.max(0, start - 3), start).matches(".*\\ba\\b.*")) {
                     btx.setString(text.substring(0, start - 1) + "n" + text.substring(start - 1));
                     return 1;
                 }
                 return 0;
             } else {
-                if (text.substring(Math.max(0, start - 4), start).matches(".*\ban\b.*")) {
+                if (text.substring(Math.max(0, start - 4), start).matches(".*\\ban\\b.*")) {
                     btx.setString(text.substring(0, start - 2) + text.substring(start - 1));
                     return -1;
                 }
@@ -301,8 +300,6 @@ public class NamingSettings implements Setting {
             int artOff = correctArticle(btx, matchStart);
             int apOff = correctApostrophe(btx, matchEnd);
 
-            matchStart = matchStart + artOff;
-            matchEnd = matchEnd + apOff;
             int finalOffset = baseOffset + artOff + apOff;
             System.out.println(path + " | " + origText.substring(matchStart, matchEnd).replaceAll("\n", "\\\\n") + " -> " + btx.getString().substring(matchStart, matchEnd + finalOffset).replaceAll("\n", "\\\\n"));
 
@@ -664,10 +661,10 @@ public class NamingSettings implements Setting {
      */
     private void targetedBtxReplacement(BTXPayload btx, File f, String path) {
         System.out.println(f.getName() + " -> " + path);
-        parseReplacements(f, path).forEach(r -> r.replaceExact(btx, path));
+        parseReplacements(f, path, false).forEach(r -> r.replaceExact(btx, path));
     }
 
-    private ArrayList<Replacement> parseReplacements(File f, String path) {
+    private ArrayList<Replacement> parseReplacements(File f, String path, boolean addAll) {
         ArrayList<Replacement> rList = new ArrayList<>();
         try {
             List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
@@ -683,7 +680,7 @@ public class NamingSettings implements Setting {
                 Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
                 rList.add(rep);
                 //By adding only the first replacement of a word to the global replacement list, we only need to define the global rules once.
-                if (replaceAll.get() && rep.global && !repMap.containsKey(rep.original)) {
+                if (replaceAll.get() && rep.global && (addAll || !repMap.containsKey(rep.original))) {
                     repMap.put(rep.original, rep);
                 }
             }
@@ -714,7 +711,7 @@ public class NamingSettings implements Setting {
                 if (pName.equals("_general.csv")) {
                     if (replaceAll.get()) {
                         System.out.println("Parsing general Replacements");
-                        parseReplacements(p, pName);
+                        parseReplacements(p, pName, true);
                     }
                     return;
                 }
