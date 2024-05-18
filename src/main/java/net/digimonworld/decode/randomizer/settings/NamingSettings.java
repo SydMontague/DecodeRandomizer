@@ -50,6 +50,7 @@ import javafx.beans.binding.When;
 import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 
 import net.digimonworld.decode.randomizer.RandomizationContext;
@@ -584,6 +585,14 @@ public class NamingSettings implements Setting {
 
         BooleanBinding manLink = new When(renameEnabled).then(manualCsv).otherwise(renameEnabled.not());
 
+        manualCsv.addListener(b -> {
+            if (manualCsv.get() == true && !(csvDir.exists() && csvDir.isDirectory() && csvDir.listFiles().length != 0)) {
+                JavaFXUtils.showAndWaitAlert(AlertType.ERROR, "No custom CSVs found", null, "No custom data found.\nCustom CSV mode requires a 'renamingPresets' directory\n containing CSV renaming lists.");
+                manualCsv.set(false);
+                manCs.fire();
+            }
+        });
+
         manCs.disableProperty().bind(renameEnabled.not());
         repAll.disableProperty().bind(renameEnabled.not());
         orgeCheck.disableProperty().bind(manLink);
@@ -616,8 +625,10 @@ public class NamingSettings implements Setting {
                             + ";;";
                     writer.write(string);
                 } catch (IOException e) {
+                    e.printStackTrace();
                 }
             });
+            manualCsv.set(true);
         };
 
         Button camelExp = new Button("Export CSVs for restoration preset");
