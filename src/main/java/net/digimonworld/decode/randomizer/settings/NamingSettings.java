@@ -69,7 +69,7 @@ public class NamingSettings implements Setting {
     private final BooleanProperty blackPrefix = new SimpleBooleanProperty(false);
     private final Map<String, BooleanProperty> randoMap = new HashMap<>();
     private final List<String> randoTypes = List.of("Digimon Names", "Finisher Names", "Skill Names", "Character Names", "Item Names", "Medal Names");
-    private final List<String> priorities = List.of("_general.csv", "DigimonNames.csv", "CardNames1.csv", "FinisherNames.csv");
+    private final List<String> priorities = List.of("_general.csv", "_general_digimon.csv", "DigimonNames.csv", "CardNames1.csv", "FinisherNames.csv");
     private final Map<String, Replacement> repMap = new HashMap<>();
 
     private Accordion mainAc;
@@ -112,6 +112,7 @@ public class NamingSettings implements Setting {
     private static TermType classifyTerm(String term, String path) {
         //These files contain digimon names
         List<String> digiNamePaths = List.of(11, 27, 28).stream().map(n -> "part0\\arcv\\Keep\\LanguageKeep_jp.res\\" + n).collect(Collectors.toList());
+        digiNamePaths.add("_general_digimon.csv");
         return digiNamePaths.contains(path) ? (term.matches(".*[a-z][A-Z].*") ? TermType.DIGIMONMULTI : TermType.DIGIMON) : TermType.GENERAL;
     }
 
@@ -708,9 +709,9 @@ public class NamingSettings implements Setting {
             }
             List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.indexOf(f.getName()))).sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? -1 : 1)).forEach(p -> {
                 String pName = p.getName();
-                if (pName.equals("_general.csv")) {
+                if (pName.equals("_general.csv") || pName.equals("_general_digimon.csv")) {
                     if (replaceAll.get()) {
-                        System.out.println("Parsing general Replacements");
+                        System.out.println("Parsing general " + (pName.contains("digimon") ? "Digimon " : "") + "replacements");
                         parseReplacements(p, pName, true);
                     }
                     return;
