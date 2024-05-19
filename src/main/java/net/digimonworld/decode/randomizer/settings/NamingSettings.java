@@ -1,5 +1,6 @@
 package net.digimonworld.decode.randomizer.settings;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -723,35 +725,53 @@ public class NamingSettings implements Setting {
      * Replacing the contents of a BTX file based on a CSV that contains direct
      * mappings to the BTX entry IDs
      */
+    private void targetedBtxReplacement(BTXPayload btx, List<String> f, String fileName, String path) {
+        System.out.println(fileName + " -> " + path);
+        parseReplacements(f, path, false).forEach(r -> r.replaceExact(btx, path));
+    }
+
+    /**
+     * Replacing the contents of a BTX file based on a CSV that contains direct
+     * mappings to the BTX entry IDs
+     */
     private void targetedBtxReplacement(BTXPayload btx, File f, String path) {
         System.out.println(f.getName() + " -> " + path);
         parseReplacements(f, path, false).forEach(r -> r.replaceExact(btx, path));
     }
 
-    private ArrayList<Replacement> parseReplacements(File f, String path, boolean addAll) {
+    private ArrayList<Replacement> instantiateReplacements(List<String> lines, String path, boolean addAll) {
         ArrayList<Replacement> rList = new ArrayList<>();
-        try {
-            List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
-            for (int i = 0; i < lines.size(); i++) {
-                if (i == 0) {
-                    continue;
-                }
-                String[] entries = lines.get(i).split(";", -1);
-                // Even if we don't replace a term, if it's a multipart Digimon name it will be changed if the camelCase option is not set.
-                if (entries[1].equals(entries[2]) && (camelCase.get() || classifyTerm(entries[2], path) != TermType.DIGIMONMULTI)) {
-                    continue;
-                }
-                Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
-                rList.add(rep);
-                //By adding only the first replacement of a word to the global replacement list, we only need to define the global rules once.
-                if (replaceAll.get() && rep.global && (addAll || !repMap.containsKey(rep.original))) {
-                    repMap.put(rep.original, rep);
-                }
+        for (int i = 0; i < lines.size(); i++) {
+            if (i == 0) {
+                continue;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            String[] entries = lines.get(i).split(";", -1);
+            // Even if we don't replace a term, if it's a multipart Digimon name it will be changed if the camelCase option is not set.
+            if (entries[1].equals(entries[2]) && (camelCase.get() || classifyTerm(entries[2], path) != TermType.DIGIMONMULTI)) {
+                continue;
+            }
+            Replacement rep = new Replacement(entries[0], entries[1], entries[2], entries[3], entries[4], path);
+            rList.add(rep);
+            //By adding only the first replacement of a word to the global replacement list, we only need to define the global rules once.
+            if (replaceAll.get() && rep.global && (addAll || !repMap.containsKey(rep.original))) {
+                repMap.put(rep.original, rep);
+            }
         }
         return rList;
+    }
+
+    private ArrayList<Replacement> parseReplacements(List<String> f, String path, boolean addAll) {
+        return instantiateReplacements(f, path, addAll);
+    }
+
+    private ArrayList<Replacement> parseReplacements(File f, String path, boolean addAll) {
+        try {
+            List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+            return instantiateReplacements(lines, path, addAll);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     @Override
@@ -764,29 +784,57 @@ public class NamingSettings implements Setting {
         PathResolver res = new PathResolver(context);
         if (mode.equals("restore")) {
             // Main logic for dub -> sub conversion
-            File manualCsvDir = new File(".\\renamingPresets\\");
-            File origin;
-            if (manualCsv.get() && manualCsvDir.exists()) {
-                origin = manualCsvDir;
-            } else {
-                origin = new File(DecodeRandomizer.class.getResource("renamingPresets/").getFile());
-            }
-            List.of(origin.listFiles()).stream().sorted(Comparator.comparing(f -> priorities.indexOf(f.getName()))).sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? -1 : 1)).forEach(p -> {
-                String pName = p.getName();
-                if (pName.equals("_general.csv") || pName.equals("_general_digimon.csv")) {
-                    if (replaceAll.get()) {
-                        System.out.println("Parsing general " + (pName.contains("digimon") ? "Digimon " : "") + "replacements");
-                        parseReplacements(p, pName, true);
+            try {
+                File manualCsvDir = new File(".\\renamingPresets\\");
+                if (manualCsv.get() && manualCsvDir.exists()) {
+                    List<File> csvs = List.of(manualCsvDir.listFiles());
+                    csvs.stream().sorted(Comparator.comparing(f -> priorities.indexOf(f.getName()))).sorted(Comparator.comparing(f -> priorities.contains(f.getName()) ? -1 : 1)).forEach(p -> {
+                        String pName = p.getName();
+                        if (pName.equals("_general.csv") || pName.equals("_general_digimon.csv")) {
+                            if (replaceAll.get()) {
+                                System.out.println("Parsing general " + (pName.contains("digimon") ? "Digimon " : "") + "replacements");
+                                parseReplacements(p, pName, true);
+                            }
+                            return;
+                        }
+                        try {
+                            Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
+                            targetedBtxReplacement(foundBtx.getValue(), p, foundBtx.getKey());
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                } else {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(DecodeRandomizer.class.getResourceAsStream("settings/builtinRenamingPreset.csv")));
+                    String pName;
+                    while ((pName = reader.readLine()) != null) {
+
+                        BufferedReader reader2 = new BufferedReader(new InputStreamReader(DecodeRandomizer.class.getResourceAsStream(pName)));
+                        String str2;
+                        ArrayList<String> foundReps = new ArrayList<>();
+                        while ((str2 = reader2.readLine()) != null) {
+                            foundReps.add(str2);
+                        }
+                        if (pName.endsWith("_general.csv") || pName.endsWith("_general_digimon.csv")) {
+                            if (replaceAll.get()) {
+                                System.out.println("Parsing general " + (pName.contains("digimon") ? "Digimon " : "") + "replacements");
+                                parseReplacements(foundReps, pName, true);
+                            }
+                            continue;
+                        }
+                        try {
+                            Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(16, pName.length() - 4));
+                            targetedBtxReplacement(foundBtx.getValue(), foundReps, pName, foundBtx.getKey());
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                     }
-                    return;
+
                 }
-                try {
-                    Tuple<String, BTXPayload> foundBtx = res.resolve(pName.substring(0, pName.length() - 4));
-                    targetedBtxReplacement(foundBtx.getValue(), p, foundBtx.getKey());
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            });
+
+            } catch (IOException exc) {
+                exc.printStackTrace();
+            }
 
             if (!replaceAll.get()) {
                 return;
