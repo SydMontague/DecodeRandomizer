@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.NoSuchElementException;
@@ -537,22 +536,19 @@ public class NamingSettings implements Setting {
         dir.mkdir();
     }
 
-    private static EventHandler<ActionEvent> buildHandler(String resourcePath, File targetDir) {
+    private static EventHandler<ActionEvent> buildHandler(File targetDir) {
         return (ActionEvent e) -> {
             e.consume();
             clearExportDir(targetDir);
-            URL origin = DecodeRandomizer.class.getResource(resourcePath);
-            if (origin == null) {
-                return;
-            }
-            List<File> fls = Utils.listFiles(new File(origin.getFile()));
-            fls.forEach(f -> {
-                try {
-                    Files.copy(f.toPath(), Path.of(targetDir.toString() + "\\" + f.getName()), StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException exc) {
-                    exc.printStackTrace();
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(DecodeRandomizer.class.getResourceAsStream("settings/builtinRenamingPreset.csv")));
+                String pName;
+                while ((pName = reader.readLine()) != null) {
+                    Files.copy(DecodeRandomizer.class.getResourceAsStream(pName), Path.of(pName), StandardCopyOption.REPLACE_EXISTING);
                 }
-            });
+            } catch (IOException exc) {
+                exc.printStackTrace();
+            }
         };
     }
 
@@ -636,7 +632,7 @@ public class NamingSettings implements Setting {
         Button camelExp = new Button("Export CSVs for restoration preset");
         Button curExp = new Button("Export CSVs for current names");
         curExp.setOnAction(rawExportHandler);
-        camelExp.setOnAction(buildHandler("renamingPresets\\", csvDir));
+        camelExp.setOnAction(buildHandler(csvDir));
 
         restoreBox.getChildren().addAll(
                 JavaFXUtils.buildToggleSwitch("Enabled", Optional.empty(), Optional.of(renameEnabled)),
