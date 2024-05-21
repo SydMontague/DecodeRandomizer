@@ -1,0 +1,15 @@
+index;original;replace;excludeTerms;excludePaths
+0;Fresh;Baby I;$ly;*\LanguageKeep_jp.res\14:4227
+0;Champion;Adult;Digimon $,Colosseum $,Tenkaichi $,You're the $,Limit $s;
+0;Ultimate;Perfect;$ Piece,$ X Antibody,$Brachiomon,$Brachimon,$ Stream,$ body,$ victory,$ Sacrifice,$ Ouryuken,$ Poop Hell,$ Weapon,$ Herbal,$ Slicer,$ Enemy,$ Thunder,$ Blast,$ Quake,$ly;*\LanguageKeep_jp.res\39:175
+0;Mega;Ultimate;$ Meat,$ Blaster,$seadramon,$dramon,$Seadramon,$ Burst,$battle,$Kabuterimon,$Gargomon,$ Electro,Ancient$,$lo,$ton,$ Barrage;*\LanguageKeep_jp.res\31:73,*\LanguageKeep_jp.res\35:188,*\LanguageKeep_jp.res\36:188
+0;Rookie;Child Digimon;;!*\LanguageKeep_jp.res\12:198,!*\LanguageKeep_jp.res\42:224
+0;Rookie;Child;$ Collector;*\mgm01_text.pack\55:600,*\mgm01_text.pack\55:700,*\LanguageKeep_jp.res\15:812
+0;Rookies;Child Digimon;;
+0;Champions;Adult Digimon;;
+0;DigiArmor Energize;Digimental Up;;
+0;Digi-Egg of;Digimental of;;
+0;Digivol;Evol;;
+0;digivol;evol;;
+0;DNA Digivol;Jogress Evol;;
+0;Digimon Fusion;Digimon Xros Wars;;
