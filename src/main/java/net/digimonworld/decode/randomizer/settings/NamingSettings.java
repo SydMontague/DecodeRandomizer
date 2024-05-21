@@ -498,13 +498,13 @@ public class NamingSettings implements Setting {
 
         }
 
-        private Tuple<Integer, String> findInText(String text, String path) {
+        public Tuple<Integer, String> findInText(String text, String path) {
             int idx = text.indexOf(original);
             if (idx == -1 && original.contains(" ") && text.contains("\n")) {
                 return adjustForNewlines(text);
             }
             //If any of the exclusion 
-            return new Tuple((idx == -1 || termExclusion(text, idx) || pathExclusion(path, idx) || isOverlapping(path, idx)) ? -1 : idx, replacement);
+            return new Tuple((idx == -1 || termExclusion(text, idx) || (path != null && (pathExclusion(path, idx) || isOverlapping(path, idx)))) ? -1 : idx, replacement);
         }
 
     }
@@ -849,7 +849,23 @@ public class NamingSettings implements Setting {
                         try {
                             Path longPath = fA.toPath();
                             Path normalPath = longPath.subpath(2, longPath.getNameCount());
+                            boolean applies;
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(longPath), StandardCharsets.UTF_16LE))) {
+                                String str;
+                                applies = false;
+                                while ((str = reader.readLine()) != null) {
+                                    String strx = str;
+                                    if (sortedReps.stream().anyMatch(r -> r.findInText(strx, null).getKey() != -1)) {
+                                        applies = true;
+                                        break;
+                                    }
+                                }
+                            }
 
+                            if (!applies) {
+                                System.out.println("Skipping " + fA.toPath());
+                                return;
+                            }
                             var elements = res.resolveRaw(normalPath.toString()).getElementsWithType(Payload.BTX);
 
                             for (int i = 0; i < elements.size(); i++) {
