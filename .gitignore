@@ -14,3 +14,12 @@
 # Testing stuff
 config.yml
 *.cci
+
+# ROMs, tools, etc.
+*.3ds
+*.cia
+3dstex
+3dstool
+armips
+ctrtool
+makerom
